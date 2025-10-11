@@ -33,26 +33,37 @@ func GetVehicle(w http.ResponseWriter, r *http.Request) {
 	defer db.Close()
 
 	// check for vehicle number
-	rows, err := db.Query(`SELECT id, licenseplate FROM vehicles WHERE licenseplate == ?`, licensePlate)
+	rows, err := db.Query(
+		`
+		SELECT id, license_plate, owner_name, father_name, is_financed, financer, present_address, permanent_address,
+		insurance_company, insurance_policy, insurance_expiry, class, registration_date, vehicle_age, pucc_upto, pucc_number,
+		chassis_number, engine_number, fuel_type, brand_name, brand_model, cubic_capacity, gross_weight, cylinders, color, norms,
+		noc_details, seating_capacity, owner_count, tax_upto, tax_paid_upto, permit_number, permit_issue_date, permit_valid_from,
+		permit_valid_upto, permit_type, national_permit_number, national_permit_upto, national_permit_issued_by, rc_status FROM vehicles WHERE licenseplate == ?
+		`,
+		licensePlate,
+	)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		fmt.Println(err)
 		return
 	}
 
-	var vehicleDetails models.VehicleDetails
+	var v models.VehicleDetails
 
+	var id int
 	// get details of vehicle from db
 	for rows.Next() {
-		var id int
-		var numberPlate string
-		rows.Scan(&id, &numberPlate)
-		if numberPlate == licensePlate {
-			json.NewEncoder(w).Encode(vehicleDetails)
-			break
-		}
+
+		rows.Scan(&id, &v.Response.LicensePlate, v.Response.OwnerName, v.Response.FatherName, v.Response.IsFinanced, v.Response.Financer, v.Response.PresentAddress, v.Response.PermanentAddress,
+			v.Response.InsuranceCompany, v.Response.InsurancePolicy, v.Response.InsuranceExpiry, v.Response.Class, v.Response.RegistrationDate, v.Response.VehicleAge, v.Response.PuccUpto, v.Response.PuccNumber,
+			v.Response.ChassisNumber, v.Response.EngineNumber, v.Response.FuelType, v.Response.BrandName, v.Response.BrandModel, v.Response.CubicCapacity, v.Response.GrossWeight, v.Response.Cylinders, v.Response.Color, v.Response.Norms,
+			v.Response.NocDetails, v.Response.SeatingCapacity, v.Response.OwnerCount, v.Response.TaxUpto, v.Response.TaxPaidUpto, v.Response.PermitNumber, v.Response.PermitIssueDate, v.Response.PermitValidFrom,
+			v.Response.PermitValidUpto, v.Response.PermitType, v.Response.NationalPermitNumber, v.Response.PermitValidUpto, v.Response.NationalPermitIssuedBy, v.Response.RcStatus,
+		)
 	}
 
+	json.NewEncoder(w).Encode(v)
 	w.WriteHeader(200)
 }
 
@@ -111,6 +122,12 @@ func DeleteVehicle(w http.ResponseWriter, r *http.Request) {
 			log.Printf("%s", str)
 		}
 	}()
+
+	// get vehicle number from db
+
+	// get challans of that vehicle from db
+
+	// delete all from db at once
 
 	w.WriteHeader(200)
 }

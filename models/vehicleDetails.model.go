@@ -61,9 +61,6 @@ type rcVerification struct {
 }
 
 func (v *VehicleDetails) GetFromDB() error {
-
-	
-
 	return nil
 }
 
