@@ -115,6 +115,26 @@ func AddVehicle(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(newVehicle)
 }
 
+func UpdateVehicle(w http.ResponseWriter, r *http.Request) {
+	defer func() {
+		if recovered := recover(); recovered != nil {
+			str := fmt.Sprintf("- error in adding vehicle to Database with error: %v", recovered)
+			log.Printf("%s", str)
+		}
+	}()
+	// get existing vehicle or return if not exist
+
+	// fetch new detials
+
+	// update detials to existing
+
+	// update to db
+
+	// return status of success or failure
+
+	w.WriteHeader(200)
+}
+
 func DeleteVehicle(w http.ResponseWriter, r *http.Request) {
 	defer func() {
 		if recovered := recover(); recovered != nil {
