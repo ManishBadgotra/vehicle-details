@@ -1,11 +1,11 @@
 package models
 
-type errorResponse struct {
+type ErrorResponse struct {
 	Error string `json:"error"`
 }
 
-func NewErrorResponse(err string) *errorResponse {
-	return &errorResponse{
+func NewErrorResponse(err string) *ErrorResponse {
+	return &ErrorResponse{
 		Error: err,
 	}
 }
