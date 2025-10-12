@@ -12,7 +12,7 @@ type ChallanResponse struct {
 	RequestID string     `json:"request_id,omitempty"`
 	VehicleID string     `json:"vehicleId,omitempty"`
 	Total     int        `json:"total,omitempty"`
-	Challans  []challans `json:"c,omitempty"`
+	Challans  []challans `json:"challans,omitempty"`
 }
 
 type challans struct {
@@ -25,6 +25,15 @@ type challans struct {
 	Area          string        `json:"area,omitempty"`
 	Offence       string        `json:"offence,omitempty"`
 	OffenceList   []offenceList `json:"offence_list,omitempty"`
+}
+
+func NewChallan() *challans {
+	return &challans{}
+}
+
+func NewOffenceList() []offenceList {
+	var offenseList []offenceList
+	return offenseList
 }
 
 type offenceList struct {

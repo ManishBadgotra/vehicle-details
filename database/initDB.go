@@ -8,6 +8,20 @@ import (
 )
 
 var (
+	FindInVehicleTable = `
+		SELECT id, license_plate, owner_name, father_name, is_financed, financer, present_address, permanent_address,
+		insurance_company, insurance_policy, insurance_expiry, class, registration_date, vehicle_age, pucc_upto, pucc_number,
+		chassis_number, engine_number, fuel_type, brand_name, brand_model, cubic_capacity, gross_weight, cylinders, color, norms,
+		noc_details, seating_capacity, owner_count, tax_upto, tax_paid_upto, permit_number, permit_issue_date, permit_valid_from,
+		permit_valid_upto, permit_type, national_permit_number, national_permit_upto, national_permit_issued_by, rc_status FROM vehicles 
+		WHERE license_plate = ?
+   		OR chassis_number = ?
+   		OR engine_number = ? 
+		LIMIT 1
+	`
+	FindInChallansTable = `
+		SELECT id, challan_no, date, accused_name, challan_status, amount, state, area, offence, offence_list FROM challans WHERE license_plate = ?
+	`
 	VehicleInsert = `
         INSERT INTO vehicles
             (request_id, license_plate, owner_name, father_name, is_financed, financer, present_address, permanent_address,

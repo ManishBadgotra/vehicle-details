@@ -2,6 +2,7 @@ package models
 
 import (
 	"database/sql"
+	"fmt"
 	"strings"
 
 	"github.com/manishbadgotra/vehicle-details/database"
@@ -57,11 +58,63 @@ type rcVerification struct {
 	NationalPermitUpto     string          `json:"national_permit_upto,omitempty"`
 	NationalPermitIssuedBy string          `json:"national_permit_issued_by,omitempty"`
 	RcStatus               string          `json:"rc_status,omitempty"`
-	Challans               ChallanResponse `json:"challans,omitempty"`
+	Challans               ChallanResponse `json:"challans_response"`
 }
 
-func (v *VehicleDetails) GetFromDB() error {
-	return nil
+func (v *VehicleDetails) GetFromDB(licensePlate, chassis, engine string) (VehicleDetails, error) {
+	// open db connection
+	db, err := database.OpenDB()
+	if err != nil {
+		return VehicleDetails{}, err
+	}
+	defer db.Close()
+
+	// check in `vehicles` Table
+	row := db.QueryRow(
+		database.FindInVehicleTable,
+		licensePlate,
+		chassis,
+		engine,
+	)
+
+	var id int
+
+	err = row.Scan(&id, &v.Response.LicensePlate, v.Response.OwnerName, v.Response.FatherName, v.Response.IsFinanced, v.Response.Financer, v.Response.PresentAddress, v.Response.PermanentAddress,
+		v.Response.InsuranceCompany, v.Response.InsurancePolicy, v.Response.InsuranceExpiry, v.Response.Class, v.Response.RegistrationDate, v.Response.VehicleAge, v.Response.PuccUpto, v.Response.PuccNumber,
+		v.Response.ChassisNumber, v.Response.EngineNumber, v.Response.FuelType, v.Response.BrandName, v.Response.BrandModel, v.Response.CubicCapacity, v.Response.GrossWeight, v.Response.Cylinders, v.Response.Color, v.Response.Norms,
+		v.Response.NocDetails, v.Response.SeatingCapacity, v.Response.OwnerCount, v.Response.TaxUpto, v.Response.TaxPaidUpto, v.Response.PermitNumber, v.Response.PermitIssueDate, v.Response.PermitValidFrom,
+		v.Response.PermitValidUpto, v.Response.PermitType, v.Response.NationalPermitNumber, v.Response.PermitValidUpto, v.Response.NationalPermitIssuedBy, v.Response.RcStatus,
+	)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return VehicleDetails{}, fmt.Errorf("no record found")
+		} else {
+			return VehicleDetails{}, err
+		}
+	}
+
+	rows, err := db.Query(
+		database.FindInChallansTable,
+		v.Response.LicensePlate,
+	)
+	if err != nil {
+		return *v, err
+	}
+
+	var challanId int
+
+	for rows.Next() {
+		challan := NewChallan()
+		var offenceListJoined string
+		rows.Scan(&challanId, &challan.ChallanNo, &challan.Date, &challan.AccusedName, &challan.ChallanStatus, &challan.Amount, &challan.State, &challan.Area, &challan.Offence, &offenceListJoined)
+		offenceList := strings.Split(offenceListJoined, ",")
+		for i, offenceName := range offenceList {
+			challan.OffenceList[i].OffenceName = offenceName
+			v.Response.Challans.Challans[i] = *challan
+		}
+	}
+
+	return *v, nil
 }
 
 func (v *VehicleDetails) AddToDB() (err error) {
@@ -129,9 +182,59 @@ func (v *VehicleDetails) AddToDB() (err error) {
 
 	return nil
 }
-func (v *VehicleDetails) UpdateFromDB() error {
+
+func (v *VehicleDetails) UpdateToDB() error {
+
+	// using transaction - Commit/Rollback pattern
+
+	// get vehicles detial from `vehicles` table
+
+	// get challans list from `challans` table
+
+	// update all updated field appropraitly
+
 	return nil
 }
-func (v *VehicleDetails) DeleteFromDB() error {
+
+func (v *VehicleDetails) DeleteFromDB(licensePlate string) error {
+	tx, err := db.Begin()
+	if err != nil {
+		return err
+	}
+
+	// first delete from `challans` table due to Foreign Key Constraints
+	stmt, err := tx.Prepare(`
+	DELETE FROM challans WHERE license_plate = ?
+	`,
+	)
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+	if _, err = stmt.Exec(licensePlate); err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	// then from `vehicles` table
+	stmt, err = tx.Prepare(`
+	DELETE FROM vehicles WHERE license_plate = ?
+	`,
+	)
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	if _, err = stmt.Exec(licensePlate); err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	err = tx.Commit()
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
