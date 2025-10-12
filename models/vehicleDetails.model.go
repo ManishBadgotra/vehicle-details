@@ -118,7 +118,7 @@ func (v *VehicleDetails) GetFromDB(licensePlate, chassis, engine string) (Vehicl
 }
 
 func (v *VehicleDetails) AddToDB() (err error) {
-	r := v.Response
+	r := &v.Response // this might create a copy of vehiceDetials's copy that can ignore updateing in original variable
 
 	db, err = database.OpenDB()
 	if err != nil {
@@ -197,6 +197,12 @@ func (v *VehicleDetails) UpdateToDB() error {
 }
 
 func (v *VehicleDetails) DeleteFromDB(licensePlate string) error {
+
+	db, err := database.OpenDB()
+	if err != nil {
+		return err
+	}
+
 	tx, err := db.Begin()
 	if err != nil {
 		return err
