@@ -2,7 +2,6 @@ package database
 
 import (
 	"database/sql"
-	"sync"
 
 	_ "modernc.org/sqlite" // this package is required for sqlite driver
 )
@@ -38,28 +37,17 @@ var (
     `
 )
 
-var (
-	db   *sql.DB
-	once sync.Once
-	err  error
-)
-
 func OpenDB() (*sql.DB, error) {
+	db, err := sql.Open("sqlite", "./data.db")
+	if err != nil {
+		return nil, err
+	}
+	_, err = db.Exec("PRAGMA foreign_keys = ON;")
+	if err != nil {
+		return nil, err
+	}
 
-	once.Do(func() {
-		db, openError := sql.Open("sqlite", "your_database_file.db")
-		if openError != nil {
-			err = openError
-			return
-		}
-		_, execError := db.Exec("PRAGMA foreign_keys = ON;")
-		if err != nil {
-			err = execError
-			return
-		}
-
-		db.SetMaxOpenConns(1)
-	}) // due to once.Do this will always returns a singleton instance of DB no matter how many times its called.
+	db.SetMaxOpenConns(1)
 
 	return db, err
 }
