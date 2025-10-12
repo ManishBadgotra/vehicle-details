@@ -42,5 +42,4 @@ func main() {
 
 	fmt.Println("Listening on PORT 8080")
 	log.Fatal(http.ListenAndServe(":8080", mux))
-
 }
