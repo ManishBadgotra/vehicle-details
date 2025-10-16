@@ -14,7 +14,7 @@ import (
 
 func GetVehicleChallans(w http.ResponseWriter, r *http.Request) {
 
-	secretCode := r.Header.Get("x-secret-code")
+	secretCode := r.Header.Get("x-request-code")
 	if secretCode != "ManishIsAGenius" {
 		errResponse := models.NewErrorResponse("secret key not setup correctly")
 		json.NewEncoder(w).Encode(errResponse)
@@ -27,7 +27,7 @@ func GetVehicleChallans(w http.ResponseWriter, r *http.Request) {
 
 	if licensePlate == "" && chassis == "" && engine == "" {
 		errResp := models.NewErrorResponse("vehicle, chassis and engine details are required")
-		json.NewEncoder(w).Encode(errResp)
+		json.NewEncoder(w).Encode(&errResp)
 		return
 	}
 
@@ -37,13 +37,13 @@ func GetVehicleChallans(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		errResp := models.NewErrorResponse("unable to create response for vehicle number")
-		json.NewEncoder(w).Encode(errResp)
+		json.NewEncoder(w).Encode(&errResp)
 		return
 	}
 
 	challanStruct, statusCode, errResp := FetchChallans(payload)
 	if errResp.Error != "" {
-		json.NewEncoder(w).Encode(errResp)
+		json.NewEncoder(w).Encode(&errResp)
 		return
 	}
 

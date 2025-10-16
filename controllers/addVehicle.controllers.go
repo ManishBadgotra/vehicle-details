@@ -20,20 +20,19 @@ func GetVehicle(w http.ResponseWriter, r *http.Request) {
 		}
 	}()
 	var v models.VehicleDetails
-	licensePlate := r.URL.Query().Get("license")
-	chassis := r.URL.Query().Get("chassis")
-	engine := r.URL.Query().Get("engine")
 
-	v, err := v.GetFromDB(licensePlate, chassis, engine)
+	licensePlate := r.URL.Query().Get("license")
+	vehicle, err := v.GetFromDB(licensePlate)
 	if err != nil {
-		w.WriteHeader(http.StatusNoContent)
-		errResp := models.NewErrorResponse("no result found")
-		json.NewEncoder(w).Encode(errResp)
+		w.WriteHeader(http.StatusBadRequest)
+		errResp := models.NewErrorResponse(err.Error())
+		json.NewEncoder(w).Encode(&errResp)
 		return
 	}
 
-	json.NewEncoder(w).Encode(v)
+	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(200)
+	json.NewEncoder(w).Encode(vehicle)
 }
 
 func AddVehicle(w http.ResponseWriter, r *http.Request) {
@@ -55,7 +54,7 @@ func AddVehicle(w http.ResponseWriter, r *http.Request) {
 
 	if licensePlate == "" && chassis == "" && engine == "" {
 		errResp := models.NewErrorResponse("vehicle, chassis and engine details are required")
-		json.NewEncoder(w).Encode(errResp)
+		json.NewEncoder(w).Encode(&errResp)
 		return
 	}
 
@@ -77,7 +76,7 @@ func AddVehicle(w http.ResponseWriter, r *http.Request) {
 	err = newVehicle.AddToDB()
 	if err != nil {
 		errResp := models.NewErrorResponse("unable to add details to database")
-		json.NewEncoder(w).Encode(errResp)
+		json.NewEncoder(w).Encode(&errResp)
 		return
 	}
 
@@ -119,12 +118,12 @@ func DeleteVehicle(w http.ResponseWriter, r *http.Request) {
 
 	if err := v.DeleteFromDB(licensePlate); err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
-		errResp := models.NewErrorResponse(err.Error())
-		json.NewEncoder(w).Encode(errResp)
+		errResp := models.NewErrorResponse("something went wrong. TRY AGAIN!")
+		json.NewEncoder(w).Encode(&errResp)
 		return
 	}
 
-	w.WriteHeader(204)
+	w.WriteHeader(200)
 }
 
 func FetchRcDetails(licensePlate, chassis, engine string) (newVehicle models.VehicleDetails, statusCode int, err error) {
@@ -179,12 +178,12 @@ func FetchRcDetails(licensePlate, chassis, engine string) (newVehicle models.Veh
 		return models.VehicleDetails{}, res.StatusCode, fmt.Errorf("error occured on third party request: %d", res.StatusCode)
 	}
 
-	challanStruct, statusCode, errResp := FetchChallans(payload)
-	if errResp.Error != "" {
-		return models.VehicleDetails{}, statusCode, fmt.Errorf("%s", errResp.Error)
-	}
+	// challanStruct, statusCode, errResp := FetchChallans(payload)
+	// if errResp.Error != "" {
+	// 	return models.VehicleDetails{}, statusCode, fmt.Errorf("%s", errResp.Error)
+	// }
 
-	newVehicle.Response.Challans = challanStruct.Response
+	// newVehicle.Response.Challans = challanStruct.Response
 
 	return newVehicle, http.StatusOK, nil
 }

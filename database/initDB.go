@@ -1,25 +1,24 @@
 package database
 
 import (
+	"context"
 	"database/sql"
+	"fmt"
 
 	_ "modernc.org/sqlite" // this package is required for sqlite driver
 )
 
 var (
 	FindInVehicleTable = `
-		SELECT id, license_plate, owner_name, father_name, is_financed, financer, present_address, permanent_address,
+		SELECT license_plate, owner_name, father_name, is_financed, financer, present_address, permanent_address,
 		insurance_company, insurance_policy, insurance_expiry, class, registration_date, vehicle_age, pucc_upto, pucc_number,
 		chassis_number, engine_number, fuel_type, brand_name, brand_model, cubic_capacity, gross_weight, cylinders, color, norms,
 		noc_details, seating_capacity, owner_count, tax_upto, tax_paid_upto, permit_number, permit_issue_date, permit_valid_from,
 		permit_valid_upto, permit_type, national_permit_number, national_permit_upto, national_permit_issued_by, rc_status FROM vehicles 
 		WHERE license_plate = ?
-   		OR chassis_number = ?
-   		OR engine_number = ? 
-		LIMIT 1
 	`
 	FindInChallansTable = `
-		SELECT id, challan_no, date, accused_name, challan_status, amount, state, area, offence, offence_list FROM challans WHERE license_plate = ?
+		SELECT challan_no, date, accused_name, challan_status, amount, state, area, offence, offence_list FROM challans WHERE license_plate = ?
 	`
 	VehicleInsert = `
         INSERT INTO vehicles
@@ -35,32 +34,40 @@ var (
             challan_no, license_plate, date, accused_name, challan_status, amount, state, area, offence, offence_list
         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
     `
+	DBInstance *sql.DB
 )
 
-func OpenDB() (*sql.DB, error) {
+func OpenDB() error {
+
 	db, err := sql.Open("sqlite", "./data.db")
 	if err != nil {
-		return nil, err
+		return err
 	}
 	_, err = db.Exec("PRAGMA foreign_keys = ON;")
-	if err != nil {
-		return nil, err
-	}
-
-	db.SetMaxOpenConns(1)
-
-	return db, err
-}
-
-func CreateDB() error {
-	db, err := OpenDB()
 	if err != nil {
 		return err
 	}
 
-	defer db.Close()
+	db.SetMaxOpenConns(1)
+	DBInstance = db
+	return err
+}
 
-	stmt, err := db.Prepare(`CREATE TABLE IF NOT EXISTS vehicles (
+func CreateDB() error {
+	err := OpenDB()
+	if err != nil {
+		return err
+	}
+
+	tx, err := DBInstance.BeginTx(context.TODO(), &sql.TxOptions{
+		Isolation: sql.LevelDefault,
+		ReadOnly:  false,
+	})
+	if err != nil {
+		return fmt.Errorf("unable to start transaction to create table")
+	}
+
+	stmt, err := tx.Prepare(`CREATE TABLE IF NOT EXISTS vehicles (
 						request_id TEXT,
 						license_plate TEXT PRIMARY KEY UNIQUE NOT NULL,
 						owner_name TEXT,
@@ -112,7 +119,7 @@ func CreateDB() error {
 		return err
 	}
 
-	stmt, err = db.Prepare(`
+	stmt, err = tx.Prepare(`
 				CREATE TABLE IF NOT EXISTS challans (
 					challan_no TEXT PRIMARY KEY,
 					license_plate TEXT NOT NULL,
@@ -137,6 +144,30 @@ func CreateDB() error {
 	}
 
 	stmt.Close()
+
+	stmt, err = tx.Prepare(`
+			CREATE TABLE IF NOT EXISTS users (
+				id INTEGER PRIMARY KEY,
+				name TEXT,
+				email TEXT UNIQUE,
+				password TEXT,
+				access TEXT	
+			);
+	`)
+	if err != nil {
+		return err
+	}
+
+	_, err = stmt.Exec()
+	if err != nil {
+		return err
+	}
+
+	stmt.Close()
+
+	if err := tx.Commit(); err != nil {
+		return fmt.Errorf("unable to commit table creation")
+	}
 
 	return nil
 }

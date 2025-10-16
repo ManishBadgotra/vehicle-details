@@ -24,19 +24,19 @@ type challans struct {
 	State         string        `json:"state,omitempty"`
 	Area          string        `json:"area,omitempty"`
 	Offence       string        `json:"offence,omitempty"`
-	OffenceList   []offenceList `json:"offence_list,omitempty"`
+	OffenceList   []OffenceList `json:"offence_list,omitempty"`
 }
 
-func NewChallan() *challans {
-	return &challans{}
+func NewChallan() challans {
+	return challans{}
 }
 
-func NewOffenceList() []offenceList {
-	var offenseList []offenceList
+func NewOffenceList() []OffenceList {
+	var offenseList []OffenceList
 	return offenseList
 }
 
-type offenceList struct {
+type OffenceList struct {
 	OffenceName string `json:"offence_name,omitempty"`
 }
 
