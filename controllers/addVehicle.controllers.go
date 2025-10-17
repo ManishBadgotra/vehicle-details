@@ -19,7 +19,7 @@ func GetVehicle(w http.ResponseWriter, r *http.Request) {
 			log.Printf("%s", str)
 		}
 	}()
-	var v models.VehicleDetails
+	var v models.VehicleRequest
 
 	licensePlate := r.URL.Query().Get("license")
 	vehicle, err := v.GetFromDB(licensePlate)
@@ -44,7 +44,7 @@ func AddVehicle(w http.ResponseWriter, r *http.Request) {
 	}()
 
 	var (
-		newVehicle models.VehicleDetails
+		newVehicle models.VehicleRequest
 		statusCode int
 	)
 
@@ -114,7 +114,7 @@ func DeleteVehicle(w http.ResponseWriter, r *http.Request) {
 
 	licensePlate := r.URL.Query().Get("license")
 
-	var v models.VehicleDetails
+	var v models.VehicleRequest
 
 	if err := v.DeleteFromDB(licensePlate); err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
@@ -126,22 +126,22 @@ func DeleteVehicle(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(200)
 }
 
-func FetchRcDetails(licensePlate, chassis, engine string) (newVehicle models.VehicleDetails, statusCode int, err error) {
+func FetchRcDetails(licensePlate, chassis, engine string) (newVehicle models.VehicleRequest, statusCode int, err error) {
 
 	if licensePlate == "" {
-		return models.VehicleDetails{}, http.StatusExpectationFailed, fmt.Errorf("vehicle number not provided")
+		return models.VehicleRequest{}, http.StatusExpectationFailed, fmt.Errorf("vehicle number not provided")
 	}
 
 	request := models.NewRequestBody(licensePlate, chassis, engine)
 
 	payload, err := json.Marshal(request)
 	if err != nil {
-		return models.VehicleDetails{}, http.StatusInternalServerError, fmt.Errorf("unable to create response for vehicle number")
+		return models.VehicleRequest{}, http.StatusInternalServerError, fmt.Errorf("unable to create response for vehicle number")
 	}
 
 	req, err := http.NewRequest("POST", "https://uat.apiclub.in/api/v1/rc_info", bytes.NewBuffer(payload))
 	if err != nil {
-		return models.VehicleDetails{}, http.StatusInternalServerError, fmt.Errorf("unable to make request to the server")
+		return models.VehicleRequest{}, http.StatusInternalServerError, fmt.Errorf("unable to make request to the server")
 	}
 
 	req.Header.Add("x-api-key", apiKey)
@@ -150,7 +150,7 @@ func FetchRcDetails(licensePlate, chassis, engine string) (newVehicle models.Veh
 
 	res, err := http.DefaultClient.Do(req)
 	if err != nil {
-		return models.VehicleDetails{}, http.StatusBadRequest, fmt.Errorf("something went wrong in requesting to server")
+		return models.VehicleRequest{}, http.StatusBadRequest, fmt.Errorf("something went wrong in requesting to server")
 	}
 
 	switch res.StatusCode {
@@ -169,18 +169,18 @@ func FetchRcDetails(licensePlate, chassis, engine string) (newVehicle models.Veh
 		}
 
 		if err = json.Unmarshal(body, &newVehicle); err != nil {
-			return models.VehicleDetails{}, http.StatusNoContent, fmt.Errorf("no content received from server")
+			return models.VehicleRequest{}, http.StatusNoContent, fmt.Errorf("no content received from server")
 		}
 
 	case http.StatusTooManyRequests:
-		return models.VehicleDetails{}, http.StatusTooManyRequests, fmt.Errorf("request quota exceeded")
+		return models.VehicleRequest{}, http.StatusTooManyRequests, fmt.Errorf("request quota exceeded")
 	default:
-		return models.VehicleDetails{}, res.StatusCode, fmt.Errorf("error occured on third party request: %d", res.StatusCode)
+		return models.VehicleRequest{}, res.StatusCode, fmt.Errorf("error occured on third party request: %d", res.StatusCode)
 	}
 
 	// challanStruct, statusCode, errResp := FetchChallans(payload)
 	// if errResp.Error != "" {
-	// 	return models.VehicleDetails{}, statusCode, fmt.Errorf("%s", errResp.Error)
+	// 	return models.VehicleRequest{}, statusCode, fmt.Errorf("%s", errResp.Error)
 	// }
 
 	// newVehicle.Response.Challans = challanStruct.Response
