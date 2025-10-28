@@ -60,13 +60,13 @@ type VehicleResponse struct {
 	RcStatus               string  `json:"rc_status,omitempty"`
 }
 
-func (v *VehicleRequest) GetFromDB(licensePlate string) (VehicleRequest, error) {
-
+func (v VehicleRequest) GetFromDB(licensePlate string) (VehicleResponse, error) {
+	var vehicle VehicleResponse
 	// var vehicles VehicleRequest
 	conn, err := database.DBInstance.Conn(context.TODO())
 	if err != nil {
 		fmt.Fprintln(os.Stdout, "error 1")
-		return VehicleRequest{}, fmt.Errorf("unable to establish connection")
+		return vehicle, fmt.Errorf("unable to establish connection")
 	}
 
 	defer conn.Close()
@@ -77,7 +77,7 @@ func (v *VehicleRequest) GetFromDB(licensePlate string) (VehicleRequest, error) 
 	})
 	if err != nil {
 		fmt.Fprintln(os.Stdout, "error 2")
-		return VehicleRequest{}, fmt.Errorf("unable to begin transaction")
+		return vehicle, fmt.Errorf("unable to begin transaction")
 	}
 
 	// check in `vehicles` Table
@@ -87,60 +87,64 @@ func (v *VehicleRequest) GetFromDB(licensePlate string) (VehicleRequest, error) 
 	)
 
 	err = row.Scan(
-		&v.Response.LicensePlate,
-		&v.Response.OwnerName,
-		&v.Response.FatherName,
-		&v.Response.IsFinanced,
-		&v.Response.Financer,
-		&v.Response.PresentAddress,
-		&v.Response.PermanentAddress,
-		&v.Response.InsuranceCompany,
-		&v.Response.InsurancePolicy,
-		&v.Response.InsuranceExpiry,
-		&v.Response.Class,
-		&v.Response.RegistrationDate,
-		&v.Response.VehicleAge,
-		&v.Response.PuccUpto,
-		&v.Response.PuccNumber,
-		&v.Response.ChassisNumber,
-		&v.Response.EngineNumber,
-		&v.Response.FuelType,
-		&v.Response.BrandName,
-		&v.Response.BrandModel,
-		&v.Response.CubicCapacity,
-		&v.Response.GrossWeight,
-		&v.Response.Cylinders,
-		&v.Response.Color,
-		&v.Response.Norms,
-		&v.Response.NocDetails,
-		&v.Response.SeatingCapacity,
-		&v.Response.OwnerCount,
-		&v.Response.Fitness,
-		&v.Response.TaxUpto,
-		&v.Response.TaxPaidUpto,
-		&v.Response.PermitNumber,
-		&v.Response.PermitIssueDate,
-		&v.Response.PermitValidFrom,
-		&v.Response.PermitValidUpto,
-		&v.Response.PermitType,
-		&v.Response.NationalPermitNumber,
-		&v.Response.NationalPermitUpto,
-		&v.Response.NationalPermitIssuedBy,
-		&v.Response.RcStatus,
+		&vehicle.LicensePlate,
+		&vehicle.OwnerName,
+		&vehicle.FatherName,
+		&vehicle.IsFinanced,
+		&vehicle.Financer,
+		&vehicle.PresentAddress,
+		&vehicle.PermanentAddress,
+		&vehicle.InsuranceCompany,
+		&vehicle.InsurancePolicy,
+		&vehicle.InsuranceExpiry,
+		&vehicle.Class,
+		&vehicle.RegistrationDate,
+		&vehicle.VehicleAge,
+		&vehicle.PuccUpto,
+		&vehicle.PuccNumber,
+		&vehicle.ChassisNumber,
+		&vehicle.EngineNumber,
+		&vehicle.FuelType,
+		&vehicle.BrandName,
+		&vehicle.BrandModel,
+		&vehicle.CubicCapacity,
+		&vehicle.GrossWeight,
+		&vehicle.Cylinders,
+		&vehicle.Color,
+		&vehicle.Norms,
+		&vehicle.NocDetails,
+		&vehicle.SeatingCapacity,
+		&vehicle.OwnerCount,
+		&vehicle.Fitness,
+		&vehicle.TaxUpto,
+		&vehicle.TaxPaidUpto,
+		&vehicle.PermitNumber,
+		&vehicle.PermitIssueDate,
+		&vehicle.PermitValidFrom,
+		&vehicle.PermitValidUpto,
+		&vehicle.PermitType,
+		&vehicle.NationalPermitNumber,
+		&vehicle.NationalPermitUpto,
+		&vehicle.NationalPermitIssuedBy,
+		&vehicle.RcStatus,
 	)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			fmt.Fprintln(os.Stdout, "error 3")
 			tx.Rollback()
-			return VehicleRequest{}, fmt.Errorf("no record found")
+			return vehicle, fmt.Errorf("no record found")
 		}
 		// else {
 		// 	fmt.Fprintln(os.Stdout, "error 4")
-		// 	return VehicleRequest{}, err
+		// 	return vehicle, err
 		// }
 	}
 
-	return *v, nil
+	if err = tx.Commit(); err != nil {
+		return vehicle, fmt.Errorf("something went wrong")
+	}
+
+	return vehicle, nil
 }
 
 func (v *VehicleRequest) AddToDB() (err error) {

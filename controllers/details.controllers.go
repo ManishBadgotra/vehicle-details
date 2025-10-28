@@ -1,13 +1,9 @@
 package controllers
 
 import (
-	"encoding/json"
 	"fmt"
-	"log/slog"
 	"net/http"
 	"time"
-
-	"github.com/manishbadgotra/vehicle-details/models"
 )
 
 var (
@@ -18,25 +14,25 @@ type vehicleStruct struct {
 	VehicleId string `json:"vehicleId"`
 }
 
-func GetVehicleDetails(w http.ResponseWriter, r *http.Request) {
+// func GetVehicleDetails(w http.ResponseWriter, r *http.Request) {
 
-	licensePlate := r.URL.Query().Get("license")
+// 	licensePlate := r.URL.Query().Get("license")
 
-	slog.String("Path Params --> ", licensePlate)
+// 	slog.String("Path Params --> ", licensePlate)
 
-	existingVehicle := models.VehicleRequest{}
-	vehicle, err := existingVehicle.GetFromDB(licensePlate)
-	if err != nil {
-		errResp := models.NewErrorResponse("data not found")
-		json.NewEncoder(w).Encode(errResp)
+// 	existingVehicle := models.VehicleRequest{}
+// 	err := existingVehicle.GetFromDB(licensePlate)
+// 	if err != nil {
+// 		errResp := models.NewErrorResponse("data not found")
+// 		json.NewEncoder(w).Encode(errResp)
 
-		w.WriteHeader(http.StatusNotFound)
-		return
-	}
+// 		w.WriteHeader(http.StatusNotFound)
+// 		return
+// 	}
 
-	json.NewEncoder(w).Encode(vehicle.Response)
+// 	json.NewEncoder(w).Encode(existingVehicle.Response)
 
-}
+// }
 
 func GetAllVehicleDetails(w http.ResponseWriter, r *http.Request) {
 

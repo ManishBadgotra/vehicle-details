@@ -14,16 +14,10 @@ import (
 )
 
 func GetVehicle(w http.ResponseWriter, r *http.Request) {
-	defer func() {
-		if recovered := recover(); recovered != nil {
-			str := fmt.Sprintf("- error in adding vehicle to Database with error: %v", recovered)
-			log.Printf("%s", str)
-		}
-	}()
-	var v models.VehicleRequest
+	v := models.VehicleRequest{}
 
 	licensePlate := r.URL.Query().Get("license")
-	vehicle, err := v.GetFromDB(licensePlate)
+	existingVehicle, err := v.GetFromDB(licensePlate)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		errResp := models.NewErrorResponse(err.Error())
@@ -33,7 +27,7 @@ func GetVehicle(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(200)
-	json.NewEncoder(w).Encode(vehicle)
+	json.NewEncoder(w).Encode(existingVehicle)
 }
 
 func AddVehicle(w http.ResponseWriter, r *http.Request) {
