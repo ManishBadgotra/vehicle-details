@@ -116,14 +116,14 @@ func (u *UserRequest) CreateUser() error {
 	return nil
 }
 
-// type UserSessionResponse struct {
-// 	UserRequest
-// 	Session string `json:"session"`
-// }
+type UserSessionResponse struct {
+	UserRequest
+	Session string `json:"session"`
+}
 
-// func UserSession(session string, user UserRequest) *UserSessionResponse {
-// 	return &UserSessionResponse{
-// 		UserRequest: user,
-// 		Session:     session,
-// 	}
-// }
+func UserSession(session string, user UserRequest) *UserSessionResponse {
+	return &UserSessionResponse{
+		UserRequest: user,
+		Session:     session,
+	}
+}

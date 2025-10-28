@@ -13,7 +13,7 @@ var (
 		SELECT license_plate, owner_name, father_name, is_financed, financer, present_address, permanent_address,
 		insurance_company, insurance_policy, insurance_expiry, class, registration_date, vehicle_age, pucc_upto, pucc_number,
 		chassis_number, engine_number, fuel_type, brand_name, brand_model, cubic_capacity, gross_weight, cylinders, color, norms,
-		noc_details, seating_capacity, owner_count, tax_upto, tax_paid_upto, permit_number, permit_issue_date, permit_valid_from,
+		noc_details, seating_capacity, owner_count, fitness, tax_upto, tax_paid_upto, permit_number, permit_issue_date, permit_valid_from,
 		permit_valid_upto, permit_type, national_permit_number, national_permit_upto, national_permit_issued_by, rc_status FROM vehicles 
 		WHERE license_plate = ?
 	`
@@ -22,12 +22,49 @@ var (
 	`
 	VehicleInsert = `
         INSERT INTO vehicles
-            (request_id, license_plate, owner_name, father_name, is_financed, financer, present_address, permanent_address,
-            insurance_company, insurance_policy, insurance_expiry, class, registration_date, vehicle_age, pucc_upto, pucc_number,
-            chassis_number, engine_number, fuel_type, brand_name, brand_model, cubic_capacity, gross_weight, cylinders, color, norms,
-            noc_details, seating_capacity, owner_count, tax_upto, tax_paid_upto, permit_number, permit_issue_date, permit_valid_from,
-            permit_valid_upto, permit_type, national_permit_number, national_permit_upto, national_permit_issued_by, rc_status)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+            (
+			license_plate, 
+			owner_name, 
+			father_name, 
+			is_financed, 
+			financer, 
+			present_address, 
+			permanent_address,
+            insurance_company, 
+			insurance_policy, 
+			insurance_expiry, 
+			class, 
+			registration_date,
+			vehicle_age, 
+			pucc_upto, 
+			pucc_number,
+            chassis_number, 
+			engine_number, 
+			fuel_type, 
+			brand_name, 
+			brand_model, 
+			cubic_capacity, 
+			gross_weight, 
+			cylinders, 
+			color, 
+			norms,
+            noc_details, 
+			seating_capacity, 
+			owner_count,
+			fitness, 
+			tax_upto, 
+			tax_paid_upto, 
+			permit_number, 
+			permit_issue_date, 
+			permit_valid_from,
+            permit_valid_upto, 
+			permit_type, 
+			national_permit_number, 
+			national_permit_upto, 
+			national_permit_issued_by, 
+			rc_status
+		)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
     `
 	ChallanInsert = `
         INSERT INTO challans (
@@ -68,11 +105,10 @@ func CreateDB() error {
 	}
 
 	stmt, err := tx.Prepare(`CREATE TABLE IF NOT EXISTS vehicles (
-						request_id TEXT,
 						license_plate TEXT PRIMARY KEY UNIQUE NOT NULL,
 						owner_name TEXT,
 						father_name TEXT,
-						is_financed TEXT,
+						is_financed INTEGER,
 						financer TEXT,
 						present_address TEXT,
 						permanent_address TEXT,

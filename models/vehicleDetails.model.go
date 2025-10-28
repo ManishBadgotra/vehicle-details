@@ -21,7 +21,7 @@ type VehicleResponse struct {
 	LicensePlate           string  `json:"license_plate,omitempty"`
 	OwnerName              string  `json:"owner_name,omitempty"`
 	FatherName             string  `json:"father_name,omitempty"`
-	IsFinanced             string  `json:"is_financed,omitempty"`
+	IsFinanced             bool    `json:"is_financed,omitempty"`
 	Financer               string  `json:"financer,omitempty"`
 	PresentAddress         string  `json:"present_address,omitempty"`
 	PermanentAddress       string  `json:"permanent_address,omitempty"`
@@ -46,16 +46,17 @@ type VehicleResponse struct {
 	NocDetails             string  `json:"noc_details,omitempty"`
 	SeatingCapacity        string  `json:"seating_capacity,omitempty"`
 	OwnerCount             string  `json:"owner_count,omitempty"`
+	Fitness                string  `json:"fit_up_to,omitempty"`
 	TaxUpto                string  `json:"tax_upto,omitempty"`
 	TaxPaidUpto            string  `json:"tax_paid_upto,omitempty"`
 	PermitNumber           string  `json:"permit_number,omitempty"`
-	PermitIssueDate        string  `json:"permit_issue_date,omitempty"`
-	PermitValidFrom        string  `json:"permit_valid_from,omitempty"`
+	PermitIssueDate        *string `json:"permit_issue_date,omitempty"`
+	PermitValidFrom        *string `json:"permit_valid_from,omitempty"`
 	PermitValidUpto        string  `json:"permit_valid_upto,omitempty"`
 	PermitType             string  `json:"permit_type,omitempty"`
-	NationalPermitNumber   string  `json:"national_permit_number,omitempty"`
-	NationalPermitUpto     string  `json:"national_permit_upto,omitempty"`
-	NationalPermitIssuedBy string  `json:"national_permit_issued_by,omitempty"`
+	NationalPermitNumber   *string `json:"national_permit_number,omitempty"`
+	NationalPermitUpto     *string `json:"national_permit_upto,omitempty"`
+	NationalPermitIssuedBy *string `json:"national_permit_issued_by,omitempty"`
 	RcStatus               string  `json:"rc_status,omitempty"`
 }
 
@@ -85,11 +86,47 @@ func (v *VehicleRequest) GetFromDB(licensePlate string) (VehicleRequest, error) 
 		licensePlate,
 	)
 
-	err = row.Scan(&v.Response.LicensePlate, &v.Response.OwnerName, &v.Response.FatherName, &v.Response.IsFinanced, &v.Response.Financer, &v.Response.PresentAddress, &v.Response.PermanentAddress,
-		&v.Response.InsuranceCompany, &v.Response.InsurancePolicy, &v.Response.InsuranceExpiry, &v.Response.Class, &v.Response.RegistrationDate, &v.Response.VehicleAge, &v.Response.PuccUpto, &v.Response.PuccNumber,
-		&v.Response.ChassisNumber, &v.Response.EngineNumber, &v.Response.FuelType, &v.Response.BrandName, &v.Response.BrandModel, &v.Response.CubicCapacity, &v.Response.GrossWeight, &v.Response.Cylinders, &v.Response.Color, &v.Response.Norms,
-		&v.Response.NocDetails, &v.Response.SeatingCapacity, &v.Response.OwnerCount, &v.Response.TaxUpto, &v.Response.TaxPaidUpto, &v.Response.PermitNumber, &v.Response.PermitIssueDate, &v.Response.PermitValidFrom,
-		&v.Response.PermitValidUpto, &v.Response.PermitType, &v.Response.NationalPermitNumber, &v.Response.PermitValidUpto, &v.Response.NationalPermitIssuedBy, &v.Response.RcStatus,
+	err = row.Scan(
+		&v.Response.LicensePlate,
+		&v.Response.OwnerName,
+		&v.Response.FatherName,
+		&v.Response.IsFinanced,
+		&v.Response.Financer,
+		&v.Response.PresentAddress,
+		&v.Response.PermanentAddress,
+		&v.Response.InsuranceCompany,
+		&v.Response.InsurancePolicy,
+		&v.Response.InsuranceExpiry,
+		&v.Response.Class,
+		&v.Response.RegistrationDate,
+		&v.Response.VehicleAge,
+		&v.Response.PuccUpto,
+		&v.Response.PuccNumber,
+		&v.Response.ChassisNumber,
+		&v.Response.EngineNumber,
+		&v.Response.FuelType,
+		&v.Response.BrandName,
+		&v.Response.BrandModel,
+		&v.Response.CubicCapacity,
+		&v.Response.GrossWeight,
+		&v.Response.Cylinders,
+		&v.Response.Color,
+		&v.Response.Norms,
+		&v.Response.NocDetails,
+		&v.Response.SeatingCapacity,
+		&v.Response.OwnerCount,
+		&v.Response.Fitness,
+		&v.Response.TaxUpto,
+		&v.Response.TaxPaidUpto,
+		&v.Response.PermitNumber,
+		&v.Response.PermitIssueDate,
+		&v.Response.PermitValidFrom,
+		&v.Response.PermitValidUpto,
+		&v.Response.PermitType,
+		&v.Response.NationalPermitNumber,
+		&v.Response.NationalPermitUpto,
+		&v.Response.NationalPermitIssuedBy,
+		&v.Response.RcStatus,
 	)
 	if err != nil {
 		if err == sql.ErrNoRows {
@@ -123,11 +160,47 @@ func (v *VehicleRequest) AddToDB() (err error) {
 		return fmt.Errorf("unable to prepare query")
 	}
 
-	if _, err := stmt.Exec(&v.Response.RequestID, &v.Response.LicensePlate, &v.Response.OwnerName, &v.Response.FatherName, &v.Response.IsFinanced, &v.Response.Financer, &v.Response.PresentAddress,
-		&v.Response.InsuranceCompany, &v.Response.InsurancePolicy, &v.Response.InsuranceExpiry, &v.Response.Class, &v.Response.RegistrationDate, &v.Response.VehicleAge, &v.Response.PuccUpto, &v.Response.PuccNumber,
-		&v.Response.ChassisNumber, &v.Response.EngineNumber, &v.Response.FuelType, &v.Response.BrandName, &v.Response.BrandModel, &v.Response.CubicCapacity, &v.Response.GrossWeight, &v.Response.Cylinders, &v.Response.Color, &v.Response.Norms,
-		&v.Response.NocDetails, &v.Response.SeatingCapacity, &v.Response.OwnerCount, &v.Response.TaxUpto, &v.Response.TaxPaidUpto, &v.Response.PermitNumber, &v.Response.PermitIssueDate, &v.Response.PermitValidFrom,
-		&v.Response.PermitValidUpto, &v.Response.PermitType, &v.Response.NationalPermitNumber, &v.Response.NationalPermitUpto, &v.Response.NationalPermitIssuedBy, &v.Response.RcStatus,
+	if _, err := stmt.Exec(
+		&v.Response.LicensePlate,
+		&v.Response.OwnerName,
+		&v.Response.FatherName,
+		&v.Response.IsFinanced,
+		&v.Response.Financer,
+		&v.Response.PresentAddress,
+		&v.Response.PermanentAddress,
+		&v.Response.InsuranceCompany,
+		&v.Response.InsurancePolicy,
+		&v.Response.InsuranceExpiry,
+		&v.Response.Class,
+		&v.Response.RegistrationDate,
+		&v.Response.VehicleAge,
+		&v.Response.PuccUpto,
+		&v.Response.PuccNumber,
+		&v.Response.ChassisNumber,
+		&v.Response.EngineNumber,
+		&v.Response.FuelType,
+		&v.Response.BrandName,
+		&v.Response.BrandModel,
+		&v.Response.CubicCapacity,
+		&v.Response.GrossWeight,
+		&v.Response.Cylinders,
+		&v.Response.Color,
+		&v.Response.Norms,
+		&v.Response.NocDetails,
+		&v.Response.SeatingCapacity,
+		&v.Response.OwnerCount,
+		&v.Response.Fitness,
+		&v.Response.TaxUpto,
+		&v.Response.TaxPaidUpto,
+		&v.Response.PermitNumber,
+		&v.Response.PermitIssueDate,
+		&v.Response.PermitValidFrom,
+		&v.Response.PermitValidUpto,
+		&v.Response.PermitType,
+		&v.Response.NationalPermitNumber,
+		&v.Response.NationalPermitUpto,
+		&v.Response.NationalPermitIssuedBy,
+		&v.Response.RcStatus,
 	); err != nil {
 		tx.Rollback()
 		return fmt.Errorf("unable to execute request")

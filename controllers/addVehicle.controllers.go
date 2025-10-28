@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"log/slog"
 	"net/http"
 	"os"
 
@@ -36,52 +37,99 @@ func GetVehicle(w http.ResponseWriter, r *http.Request) {
 }
 
 func AddVehicle(w http.ResponseWriter, r *http.Request) {
-	defer func() {
-		if recovered := recover(); recovered != nil {
-			str := fmt.Sprintf("- error in adding vehicle to Database with error: %v", recovered)
-			log.Printf("%s", str)
-		}
-	}()
+	var requestedURL string
+	if os.Getenv("IN_PROD") == "1" {
+		requestedURL = os.Getenv("PROD_URL") + os.Getenv("V1_VEHICLE_ENDPOINT")
+	} else {
+		requestedURL = os.Getenv("UAT_URL") + os.Getenv("V1_VEHICLE_ENDPOINT")
+	}
 
-	var (
-		newVehicle models.VehicleRequest
-		statusCode int
-	)
+	reqBody := vehicleStruct{}
 
-	licensePlate := r.URL.Query().Get("license")
-	chassis := r.URL.Query().Get("chassis")
-	engine := r.URL.Query().Get("engine")
+	decoder := json.NewDecoder(r.Body)
+	if err := decoder.Decode(&reqBody); err != nil {
+		errResp := models.NewErrorResponse("request unsupported")
+		json.NewEncoder(w).Encode(errResp)
 
-	if licensePlate == "" && chassis == "" && engine == "" {
-		errResp := models.NewErrorResponse("vehicle, chassis and engine details are required")
-		json.NewEncoder(w).Encode(&errResp)
+		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
-	newVehicle, statusCode, err := FetchRcDetails(licensePlate, chassis, engine)
-	if err != nil {
-		errResponse := models.NewErrorResponse(err.Error())
-		json.NewEncoder(w).Encode(errResponse)
-	}
+	slog.String("Path Params --> ", reqBody.VehicleId)
 
-	switch statusCode {
-	case http.StatusOK:
-		w.WriteHeader(http.StatusOK)
-		json.NewEncoder(w).Encode(newVehicle)
-	default:
-		w.WriteHeader(statusCode)
-	}
-
-	// save returned result to db
-	err = newVehicle.AddToDB()
+	payload, err := json.Marshal(&reqBody)
 	if err != nil {
-		errResp := models.NewErrorResponse("unable to add details to database")
-		json.NewEncoder(w).Encode(&errResp)
+		w.WriteHeader(http.StatusInternalServerError)
+
+		errResp := models.NewErrorResponse("unable to create response for vehicle number")
+		json.NewEncoder(w).Encode(errResp)
 		return
 	}
 
-	// return rc details & challans details
-	json.NewEncoder(w).Encode(newVehicle)
+	req, err := http.NewRequest("POST", requestedURL, bytes.NewBuffer(payload))
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+
+		errResp := models.NewErrorResponse("unable to make request to the server")
+		json.NewEncoder(w).Encode(errResp)
+		return
+	}
+
+	req.Header.Add("accept", "application/json")
+	req.Header.Add("Referer", "docs.apiclub.in")
+	req.Header.Add("content-type", "application/json")
+	req.Header.Add("x-api-key", os.Getenv("API_KEY"))
+
+	res, err := http.DefaultClient.Do(req)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	// defer res.Body.Close()
+
+	// body, err := io.ReadAll(res.Body)
+	// if err != nil {
+	// 	w.WriteHeader(http.StatusInternalServerError)
+	// 	json.NewEncoder(w).Encode(models.NewErrorResponse("unable to read response body"))
+	// 	return
+	// }
+
+	w.Header().Set("Content-Type", "application/json")
+	decoder = json.NewDecoder(res.Body)
+	// w.WriteHeader(res.StatusCode)
+	// w.Write(body)
+
+	vehicleStruct := models.VehicleRequest{}
+
+	if err := decoder.Decode(&vehicleStruct); err != nil {
+		w.WriteHeader(http.StatusNoContent)
+		return
+	}
+
+	// // Save body to file
+	// err = os.WriteFile("vehicle_details.json", body, 0644)
+	// if err != nil {
+	// 	log.Println("Failed to save response:", err)
+	// }
+
+	// if err = json.Unmarshal(body, &vehicleStruct); err != nil {
+	// 	w.WriteHeader(http.StatusNoContent)
+	// 	return
+	// }
+
+	err = vehicleStruct.AddToDB()
+	if err != nil {
+		w.WriteHeader(503)
+
+		errResp := models.NewErrorResponse("request successfull but unable to save data to database")
+		json.NewEncoder(w).Encode(errResp)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+
+	log.Println("Vehicle Details Request successfull")
+	json.NewEncoder(w).Encode(vehicleStruct.Response)
 }
 
 func UpdateVehicle(w http.ResponseWriter, r *http.Request) {

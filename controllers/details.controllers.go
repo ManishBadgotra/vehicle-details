@@ -1,104 +1,59 @@
 package controllers
 
-var (
-	apiKey string = ""
+import (
+	"encoding/json"
+	"fmt"
+	"log/slog"
+	"net/http"
+	"time"
+
+	"github.com/manishbadgotra/vehicle-details/models"
 )
 
-// func GetVehicleDetails(w http.ResponseWriter, r *http.Request) {
-// 	// requestURL := path.Join(request.Config.URL, request.Config.VehicleEndpoint)
+var (
+	apiKey = ""
+)
 
-// 	// fmt.Println(requestURL)
-// 	secretCode := r.Header.Get("x-secret-code")
-// 	if secretCode != "ManishIsAGenius" {
-// 		errResponse := models.NewErrorResponse("secret key not setup correctly")
-// 		json.NewEncoder(w).Encode(errResponse)
-// 		return
-// 	}
+type vehicleStruct struct {
+	VehicleId string `json:"vehicleId"`
+}
 
-// 	decoder := json.NewDecoder(r.Body)
-// 	if err := decoder.Decode(&request); err != nil {
-// 		w.WriteHeader(http.StatusNoContent)
+func GetVehicleDetails(w http.ResponseWriter, r *http.Request) {
 
-// 		errResp := models.NewErrorResponse("something went related to your request")
-// 		json.NewEncoder(w).Encode(errResp)
-// 		return
-// 	}
+	licensePlate := r.URL.Query().Get("license")
 
-// 	request.RegNO = strings.Trim(request.RegNO, " ")
-// 	if request.RegNO == "" {
-// 		w.WriteHeader(http.StatusExpectationFailed)
+	slog.String("Path Params --> ", licensePlate)
 
-// 		errResp := models.NewErrorResponse("no vehicle number provided")
-// 		json.NewEncoder(w).Encode(errResp)
-// 		return
-// 	}
+	existingVehicle := models.VehicleRequest{}
+	vehicle, err := existingVehicle.GetFromDB(licensePlate)
+	if err != nil {
+		errResp := models.NewErrorResponse("data not found")
+		json.NewEncoder(w).Encode(errResp)
 
-// 	payload, err := json.Marshal(request)
-// 	if err != nil {
-// 		w.WriteHeader(http.StatusInternalServerError)
+		w.WriteHeader(http.StatusNotFound)
+		return
+	}
 
-// 		errResp := models.NewErrorResponse("unable to create response for vehicle number")
-// 		json.NewEncoder(w).Encode(errResp)
-// 		return
-// 	}
+	json.NewEncoder(w).Encode(vehicle.Response)
 
-// 	req, err := http.NewRequest("POST", "requestURL", bytes.NewBuffer(payload))
-// 	if err != nil {
-// 		w.WriteHeader(http.StatusInternalServerError)
+}
 
-// 		errResp := models.NewErrorResponse("unable to make request to the server")
-// 		json.NewEncoder(w).Encode(errResp)
-// 		return
-// 	}
+func GetAllVehicleDetails(w http.ResponseWriter, r *http.Request) {
 
-// 	req.Header.Add("x-rapidapi-key", request.Config.APIKey)
-// 	req.Header.Add("x-rapidapi-host", "rto-vehicle-information-india.p.rapidapi.com")
-// 	req.Header.Add("Content-Type", "application/json")
+	cookie, err := r.Cookie("user-session")
 
-// 	res, err := http.DefaultClient.Do(req)
-// 	if err != nil {
-// 		w.WriteHeader(http.StatusBadRequest)
-// 		return
-// 	}
+	if err != nil {
+		if err == http.ErrNoCookie {
+			// Cookie not found
+			fmt.Fprintf(w, "Cookie 'myCookie' not found.")
+			return
+		}
+		// Other error occurred
+		http.Error(w, "Error retrieving cookie: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
 
-// 	switch res.StatusCode {
-// 	case http.StatusOK:
+	t := cookie.Expires
 
-// 		vehicleStruct := NewVehicleDetailsResponse()
-
-// 		defer res.Body.Close()
-
-// 		body, _ := io.ReadAll(res.Body)
-
-// 		fmt.Println(string(body))
-
-// 		// Save body to file
-// 		err = os.WriteFile("vehicle_details.json", body, 0644)
-// 		if err != nil {
-// 			log.Println("Failed to save response:", err)
-// 		}
-
-// 		if err = json.Unmarshal(body, &vehicleStruct); err != nil {
-// 			w.WriteHeader(http.StatusNoContent)
-// 			return
-// 		}
-
-// 		w.WriteHeader(http.StatusOK)
-
-// 		fmt.Println("Vehicle Details Request successfull")
-// 		json.NewEncoder(w).Encode(vehicleStruct)
-
-// 	case http.StatusTooManyRequests:
-
-// 		w.WriteHeader(http.StatusTooManyRequests)
-// 		errResp := models.NewErrorResponse("request quota exceeded.")
-// 		json.NewEncoder(w).Encode(errResp)
-
-// 	default:
-
-// 		w.WriteHeader(res.StatusCode)
-// 		errResp := models.NewErrorResponse(fmt.Sprintf("error occured on third party request: %d", res.StatusCode))
-// 		json.NewEncoder(w).Encode(errResp)
-
-// 	}
-// }
+	fmt.Fprintln(w, "all vehicles here --- ", "Value of 'myCookie': ", cookie.Value, " t is ---> ", t.Before(time.Now().UTC()))
+}
