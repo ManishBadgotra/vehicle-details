@@ -133,6 +133,7 @@ func CreateDB() error {
 						noc_details TEXT,
 						seating_capacity TEXT,
 						owner_count TEXT,
+						fitness TEXT,
 						tax_upto TEXT,
 						tax_paid_upto TEXT,
 						permit_number TEXT,
