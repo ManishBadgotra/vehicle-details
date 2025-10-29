@@ -42,6 +42,8 @@ func main() {
 	// mux.HandleFunc("PUT /v1/vehicles", controllers.UpdateVehicle)
 	// mux.HandleFunc("DELETE /v1/vehicles", controllers.DeleteVehicle)
 
+	mux.HandleFunc("GET /v1/challans", controllers.GetVehicleChallans)
+
 	log.Println("running PORT on :5898")
 	log.Fatal(http.ListenAndServe(":5898", cors.New(corsOptions).Handler(mux)))
 }
