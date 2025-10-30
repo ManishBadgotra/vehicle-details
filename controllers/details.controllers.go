@@ -6,10 +6,6 @@ import (
 	"time"
 )
 
-var (
-	apiKey = ""
-)
-
 type vehicleStruct struct {
 	VehicleId string `json:"vehicleId"`
 }

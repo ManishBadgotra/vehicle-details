@@ -10,15 +10,58 @@ import (
 
 var (
 	FindInVehicleTable = `
-		SELECT license_plate, owner_name, father_name, is_financed, financer, present_address, permanent_address,
-		insurance_company, insurance_policy, insurance_expiry, class, registration_date, vehicle_age, pucc_upto, pucc_number,
-		chassis_number, engine_number, fuel_type, brand_name, brand_model, cubic_capacity, gross_weight, cylinders, color, norms,
-		noc_details, seating_capacity, owner_count, fitness, tax_upto, tax_paid_upto, permit_number, permit_issue_date, permit_valid_from,
-		permit_valid_upto, permit_type, national_permit_number, national_permit_upto, national_permit_issued_by, rc_status FROM vehicles 
+		SELECT 
+		license_plate, 
+		owner_name, 
+		father_name, 
+		is_financed, 
+		financer, 
+		present_address, 
+		permanent_address,
+		insurance_company, 
+		insurance_policy, 
+		insurance_expiry, 
+		class, 
+		registration_date,
+		pucc_upto, 
+		pucc_number,
+		chassis_number, 
+		engine_number, 
+		fuel_type, 
+		brand_name, 
+		brand_model, 
+		cubic_capacity, 
+		gross_weight, 
+		cylinders, 
+		color, 
+		norms,
+		seating_capacity, 
+		owner_count,
+		fitness, 
+		tax_upto, 
+		permit_number, 
+		permit_valid_upto, 
+		permit_type, 
+		national_permit_number, 
+		national_permit_upto, 
+		national_permit_issued_by, 
+		total_challans, 
+		pending_challans,
+		rc_status
+		FROM vehicles 
 		WHERE license_plate = ?
 	`
 	FindInChallansTable = `
-		SELECT challan_no, date, accused_name, challan_status, amount, state, area, offence, offence_list FROM challans WHERE license_plate = ?
+		SELECT 
+		challan_no, 
+		date, 
+		accused_name, 
+		challan_status, 
+		amount, 
+		state, 
+		area, 
+		offence 
+		FROM challans WHERE license_plate = ?
 	`
 	VehicleInsert = `
         INSERT INTO vehicles
@@ -35,7 +78,6 @@ var (
 			insurance_expiry, 
 			class, 
 			registration_date,
-			vehicle_age, 
 			pucc_upto, 
 			pucc_number,
             chassis_number, 
@@ -48,28 +90,34 @@ var (
 			cylinders, 
 			color, 
 			norms,
-            noc_details, 
 			seating_capacity, 
 			owner_count,
 			fitness, 
 			tax_upto, 
-			tax_paid_upto, 
 			permit_number, 
-			permit_issue_date, 
-			permit_valid_from,
             permit_valid_upto, 
 			permit_type, 
 			national_permit_number, 
 			national_permit_upto, 
 			national_permit_issued_by, 
+			total_challans, 
+			pending_challans,
 			rc_status
 		)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
     `
 	ChallanInsert = `
         INSERT INTO challans (
-            challan_no, license_plate, date, accused_name, challan_status, amount, state, area, offence, offence_list
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+            challan_no, 
+			license_plate, 
+			date, 
+			accused_name, 
+			challan_status, 
+			amount, 
+			state, 
+			area, 
+			offence
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);
     `
 	DBInstance *sql.DB
 )
@@ -144,6 +192,8 @@ func CreateDB() error {
 						national_permit_number TEXT,
 						national_permit_upto TEXT,
 						national_permit_issued_by TEXT,
+						total_challans INTEGER, 
+						pending_challans INTEGER,
 						rc_status TEXT
 					);
 	`)
@@ -158,7 +208,7 @@ func CreateDB() error {
 
 	stmt, err = tx.Prepare(`
 				CREATE TABLE IF NOT EXISTS challans (
-					challan_no TEXT PRIMARY KEY,
+					challan_no TEXT PRIMARY KEY UNIQUE,
 					license_plate TEXT NOT NULL,
 					date TEXT,
 					accused_name TEXT,
@@ -166,9 +216,7 @@ func CreateDB() error {
 					amount INTEGER,
 					state TEXT,
 					area TEXT,
-					offence TEXT,
-					offence_list TEXT,
-					FOREIGN KEY (license_plate) REFERENCES vehicles(license_plate)
+					offence TEXT
 				);
 	`)
 	if err != nil {

@@ -11,6 +11,7 @@ import (
 
 	"github.com/manishbadgotra/vehicle-details/controllers"
 	"github.com/manishbadgotra/vehicle-details/database"
+	"github.com/manishbadgotra/vehicle-details/utils"
 )
 
 func init() {
@@ -26,12 +27,14 @@ func init() {
 
 func main() {
 
+	go utils.GetVehiclesFromList()
+
 	mux := http.NewServeMux()
 
 	corsOptions := cors.Options{
 		AllowedOrigins: []string{"*"},
 		AllowedMethods: []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
-		AllowedHeaders: []string{"Content-Type", "x-request-code"},
+		AllowedHeaders: []string{"Content-Type"},
 	}
 
 	mux.HandleFunc("POST /v1/login", controllers.Login)
@@ -42,7 +45,7 @@ func main() {
 	// mux.HandleFunc("PUT /v1/vehicles", controllers.UpdateVehicle)
 	// mux.HandleFunc("DELETE /v1/vehicles", controllers.DeleteVehicle)
 
-	mux.HandleFunc("GET /v1/challans", controllers.GetVehicleChallans)
+	// mux.HandleFunc("GET /v1/challans", controllers.GetVehicleChallans)
 
 	log.Println("running PORT on :5898")
 	log.Fatal(http.ListenAndServe(":5898", cors.New(corsOptions).Handler(mux)))
