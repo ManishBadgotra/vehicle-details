@@ -28,7 +28,7 @@ type Challan struct {
 	Date          string `json:"date"`
 	AccusedName   string `json:"accused_name"`
 	ChallanStatus string `json:"challan_status"`
-	Amount        int    `json:"amount"`
+	Amount        string `json:"amount"`
 	State         string `json:"state"`
 	Area          string `json:"area"`
 	Offence       string `json:"offence"`

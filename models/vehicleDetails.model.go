@@ -328,7 +328,7 @@ func FetchVehicleDetails(payload []byte) (VehicleRequest, int, *ErrorResponse) {
 
 	if res.StatusCode == http.StatusOK {
 
-		challanRequest := NewRequestBody(newVehicle.Response.LicensePlate, newVehicle.Response.ChassisNumber, newVehicle.Response.ChassisNumber)
+		challanRequest := NewRequestBody(newVehicle.Response.LicensePlate, newVehicle.Response.ChassisNumber, newVehicle.Response.EngineNumber)
 
 		challanPayload, err := json.Marshal(challanRequest)
 		if err != nil {

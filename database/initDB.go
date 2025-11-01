@@ -213,7 +213,7 @@ func CreateDB() error {
 					date TEXT,
 					accused_name TEXT,
 					challan_status TEXT,
-					amount INTEGER,
+					amount TEXT,
 					state TEXT,
 					area TEXT,
 					offence TEXT
