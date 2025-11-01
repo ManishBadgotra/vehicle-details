@@ -256,21 +256,21 @@ func (v *VehicleRequest) DeleteFromDB(licensePlate string) (err error) {
 	}
 
 	// first delete from `challans` table due to Foreign Key Constraints
-	stmt, err := tx.Prepare(`
-	DELETE FROM challans WHERE license_plate = ?
-	`,
-	)
-	if err != nil {
-		tx.Rollback()
-		return err
-	}
-	if _, err = stmt.Exec(licensePlate); err != nil {
-		tx.Rollback()
-		return err
-	}
+	// stmt, err := tx.Prepare(`
+	// DELETE FROM challans WHERE license_plate = ?
+	// `,
+	// )
+	// if err != nil {
+	// 	tx.Rollback()
+	// 	return err
+	// }
+	// if _, err = stmt.Exec(licensePlate); err != nil {
+	// 	tx.Rollback()
+	// 	return err
+	// }
 
 	// then from `vehicles` table
-	stmt, err = tx.Prepare(`
+	stmt, err := tx.Prepare(`
 	DELETE FROM vehicles WHERE license_plate = ?
 	`,
 	)
@@ -478,10 +478,13 @@ func FetchChallans(payload []byte) (*ChallanResponse, int, *ErrorResponse) {
 		// 	log.Println("Failed to save response:", err)
 		// }
 
-		// delete existing challans of same vehicle
-		challan.Delete()
-		// save new challans again in db
-		challan.Save()
+		if err := challan.Delete(); err != nil {
+			log.Println("Challan Delete error:", err)
+		}
+
+		if err := challan.Save(); err != nil {
+			log.Println("Challan Save error:", err)
+		}
 
 		return challan, http.StatusOK, nil
 	}

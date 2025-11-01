@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"os"
 	"regexp"
+	"strconv"
 	"time"
 
 	"github.com/manishbadgotra/vehicle-details/models"
@@ -37,92 +38,101 @@ type vehicleStruct struct {
 
 func GetVehiclesFromList() {
 
-	for range time.Tick(time.Duration(time.Wednesday)) {
-		// Open the CSV file
-		log.Println("opening vehicles.csv file")
+	for t := range time.Tick(24 * time.Hour) {
 
-		file, err := os.Open("vehicles.csv")
+		day, err := strconv.Atoi(os.Getenv("WEEKDAY_IN_NUMBER"))
 		if err != nil {
-			log.Fatalf("Error opening file: %v", err)
+			log.Println("WEEKDAY_IN_NUMBER in ENV is incorrect")
+			os.Exit(1)
 		}
-		defer file.Close() // Ensure the file is closed
 
-		// Create a new CSV reader
-		reader := csv.NewReader(file)
-		log.Println("new csv reader created")
+		if t.UTC().Day() == day {
+			// Open the CSV file
+			// log.Println("opening vehicles.csv file")
 
-		fmt.Println("\nReading records line by line:")
-		for {
-			record, err := reader.Read()
-			if err == io.EOF {
-				break // End of file
-			}
+			file, err := os.Open("vehicles.csv")
 			if err != nil {
-				log.Fatalf("Error reading record: %v", err)
+				log.Fatalf("Error opening file: %v", err)
 			}
+			defer file.Close() // Ensure the file is closed
 
-			licensePlate := record[0]
+			// Create a new CSV reader
+			reader := csv.NewReader(file)
+			// log.Println("new csv reader created")
 
-			reqVehicle := vehicleStruct{}
-			reqVehicle.VehicleId = licensePlate
+			fmt.Println("\nReading vehicle line by line:")
+			for {
+				record, err := reader.Read()
+				if err == io.EOF {
+					break // End of file
+				}
+				if err != nil {
+					log.Fatalf("Error reading record: %v", err)
+				}
 
-			payload, err := json.Marshal(&reqVehicle)
-			if err != nil {
-				log.Printf("License Number: %v is unable to marshal", licensePlate)
-				return
-			}
+				licensePlate := record[0]
 
-			_, statusCode, errResp := models.FetchVehicleDetails(payload)
-			if errResp != nil {
-				log.Printf("error in fetching `License Number: %v's` details with error: %v\n", licensePlate, errResp.Error)
-			}
+				reqVehicle := vehicleStruct{}
+				reqVehicle.VehicleId = licensePlate
 
-			if statusCode == http.StatusOK {
-				log.Printf("Reqeust successfull for `License Number: %v`\n", reqVehicle.VehicleId)
-			}
+				payload, err := json.Marshal(&reqVehicle)
+				if err != nil {
+					log.Printf("License Number: %v is unable to marshal", licensePlate)
+					return
+				}
 
-			if statusCode == 400 {
-				log.Printf("bad request for `License Number: %v\n", reqVehicle.VehicleId)
-			}
+				_, statusCode, errResp := models.FetchVehicleDetails(payload)
+				if errResp != nil {
+					log.Printf("error in fetching `License Number: %v's` details with error: %v\n", licensePlate, errResp.Error)
+				}
 
-			if statusCode == 401 {
-				log.Printf("Unauthorized/Expired for `License Number: %v\n", reqVehicle.VehicleId)
-			}
+				if statusCode == http.StatusOK {
+					log.Printf("Reqeust successfull for `License Number: %v`\n", reqVehicle.VehicleId)
+				}
 
-			if statusCode == 402 {
-				log.Printf("Insufficient Funds stopping server for few hours and sending alert on mail \n")
-			}
+				if statusCode == 400 {
+					log.Printf("bad request for `License Number: %v\n", reqVehicle.VehicleId)
+				}
 
-			if statusCode == 403 {
-				log.Printf("Unauthenticated Request while requesting data for `License Number: %v\n", reqVehicle.VehicleId)
-			}
+				if statusCode == 401 {
+					log.Printf("Unauthorized/Expired for `License Number: %v\n", reqVehicle.VehicleId)
+				}
 
-			if statusCode == 404 {
-				log.Printf("Not Found for `License Number: %v\n", reqVehicle.VehicleId)
-			}
+				if statusCode == 402 {
+					log.Printf("Insufficient Funds stopping server for few hours and sending alert on mail \n")
+				}
 
-			if statusCode == 405 {
-				log.Printf("Method Not Allowed for `License Number: %v\n", reqVehicle.VehicleId)
-			}
+				if statusCode == 403 {
+					log.Printf("Unauthenticated Request while requesting data for `License Number: %v\n", reqVehicle.VehicleId)
+				}
 
-			if statusCode == 415 {
-				log.Printf("Unsupported Media Type for `License Number: %v\n", reqVehicle.VehicleId)
-			}
+				if statusCode == 404 {
+					log.Printf("Not Found for `License Number: %v\n", reqVehicle.VehicleId)
+				}
 
-			if statusCode == 422 {
-				log.Printf("Request failed due to invalid details for `License Number: %v\n", reqVehicle.VehicleId)
-			}
+				if statusCode == 405 {
+					log.Printf("Method Not Allowed for `License Number: %v\n", reqVehicle.VehicleId)
+				}
 
-			if statusCode == 429 {
-				log.Printf("Too many requests for `License Number: %v\n", reqVehicle.VehicleId)
-			}
+				if statusCode == 415 {
+					log.Printf("Unsupported Media Type for `License Number: %v\n", reqVehicle.VehicleId)
+				}
 
-			if statusCode == 500 {
-				log.Printf("Internal Server Error while fetching data for `License Number: %v\n", reqVehicle.VehicleId)
-			}
+				if statusCode == 422 {
+					log.Printf("Request failed due to invalid details for `License Number: %v\n", reqVehicle.VehicleId)
+				}
 
-			if statusCode == 503 {
-				log.Printf("Backend Down/Maintenance stopping server for few hours for `License Number: %v\n", reqVehicle.VehicleId)
+				if statusCode == 429 {
+					log.Printf("Too many requests for `License Number: %v\n", reqVehicle.VehicleId)
+				}
+
+				if statusCode == 500 {
+					log.Printf("Internal Server Error while fetching data for `License Number: %v\n", reqVehicle.VehicleId)
+				}
+
+				if statusCode == 503 {
+					log.Printf("Backend Down/Maintenance stopping server for few hours for `License Number: %v\n", reqVehicle.VehicleId)
+				}
 			}
 		}
 
