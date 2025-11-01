@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"net/http"
 	"os"
 	"regexp"
 	"time"
@@ -36,7 +37,7 @@ type vehicleStruct struct {
 
 func GetVehiclesFromList() {
 
-	for range time.Tick(time.Second) {
+	for range time.Tick(time.Duration(time.Wednesday)) {
 		// Open the CSV file
 		log.Println("opening vehicles.csv file")
 
@@ -71,9 +72,57 @@ func GetVehiclesFromList() {
 				return
 			}
 
-			_, _, errResp := models.FetchVehicleDetails(payload)
+			_, statusCode, errResp := models.FetchVehicleDetails(payload)
 			if errResp != nil {
 				log.Printf("error in fetching `License Number: %v's` details with error: %v\n", licensePlate, errResp.Error)
+			}
+
+			if statusCode == http.StatusOK {
+				log.Printf("Reqeust successfull for `License Number: %v`\n", reqVehicle.VehicleId)
+			}
+
+			if statusCode == 400 {
+				log.Printf("bad request for `License Number: %v\n", reqVehicle.VehicleId)
+			}
+
+			if statusCode == 401 {
+				log.Printf("Unauthorized/Expired for `License Number: %v\n", reqVehicle.VehicleId)
+			}
+
+			if statusCode == 402 {
+				log.Printf("Insufficient Funds stopping server for few hours and sending alert on mail \n")
+			}
+
+			if statusCode == 403 {
+				log.Printf("Unauthenticated Request while requesting data for `License Number: %v\n", reqVehicle.VehicleId)
+			}
+
+			if statusCode == 404 {
+				log.Printf("Not Found for `License Number: %v\n", reqVehicle.VehicleId)
+			}
+
+			if statusCode == 405 {
+				log.Printf("Method Not Allowed for `License Number: %v\n", reqVehicle.VehicleId)
+			}
+
+			if statusCode == 415 {
+				log.Printf("Unsupported Media Type for `License Number: %v\n", reqVehicle.VehicleId)
+			}
+
+			if statusCode == 422 {
+				log.Printf("Request failed due to invalid details for `License Number: %v\n", reqVehicle.VehicleId)
+			}
+
+			if statusCode == 429 {
+				log.Printf("Too many requests for `License Number: %v\n", reqVehicle.VehicleId)
+			}
+
+			if statusCode == 500 {
+				log.Printf("Internal Server Error while fetching data for `License Number: %v\n", reqVehicle.VehicleId)
+			}
+
+			if statusCode == 503 {
+				log.Printf("Backend Down/Maintenance stopping server for few hours for `License Number: %v\n", reqVehicle.VehicleId)
 			}
 		}
 

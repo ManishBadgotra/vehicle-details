@@ -292,11 +292,10 @@ func (v *VehicleRequest) DeleteFromDB(licensePlate string) (err error) {
 	return nil
 }
 
-func FetchVehicleDetails(payload []byte) (VehicleRequest, int, *ErrorResponse) {
+func FetchVehicleDetails(payload []byte) (newVehicle VehicleRequest, statusCode int, errResp *ErrorResponse) {
 
 	var (
 		requestedURL string
-		newVehicle   VehicleRequest
 	)
 	if os.Getenv("IN_PROD") == "1" {
 		requestedURL = os.Getenv("PROD_URL") + os.Getenv("V1_VEHICLE_ENDPOINT")
