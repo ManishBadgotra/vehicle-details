@@ -74,11 +74,10 @@ func GetVehiclesFromList() {
 			_, _, errResp := models.FetchVehicleDetails(payload)
 			if errResp != nil {
 				log.Printf("error in fetching `License Number: %v's` details with error: %v\n", licensePlate, errResp.Error)
-				return
 			}
 		}
 
-		log.Fatalf("whole csv data fetched")
+		// log.Fatalf("whole csv data fetched")
 	}
 
 }

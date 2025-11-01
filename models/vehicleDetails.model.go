@@ -326,38 +326,46 @@ func FetchVehicleDetails(payload []byte) (VehicleRequest, int, *ErrorResponse) {
 		return newVehicle, http.StatusNotFound, NewErrorResponse(err.Error())
 	}
 
-	challanRequest := NewRequestBody(newVehicle.Response.LicensePlate, newVehicle.Response.ChassisNumber, newVehicle.Response.ChassisNumber)
+	if res.StatusCode == http.StatusOK {
 
-	challanPayload, err := json.Marshal(challanRequest)
-	if err != nil {
-		// errResp := NewErrorResponse("unable to create response for vehicle number")
-		return newVehicle, http.StatusInternalServerError, NewErrorResponse(err.Error())
+		challanRequest := NewRequestBody(newVehicle.Response.LicensePlate, newVehicle.Response.ChassisNumber, newVehicle.Response.ChassisNumber)
+
+		challanPayload, err := json.Marshal(challanRequest)
+		if err != nil {
+			// errResp := NewErrorResponse("unable to create response for vehicle number")
+			return newVehicle, http.StatusInternalServerError, NewErrorResponse(err.Error())
+		}
+
+		challans, statusCode, errResp := FetchChallans(challanPayload)
+		if errResp != nil {
+			return newVehicle, statusCode, errResp
+		}
+
+		if challans != nil {
+
+			totalChallans, pendingChallans, challanLists, err := challans.Get()
+			if err != nil {
+				log.Printf("count challans error: %v", err)
+			}
+
+			if err == nil {
+				newVehicle.Response.ChallanList = append(newVehicle.Response.ChallanList, challanLists...)
+			}
+
+			newVehicle.Response.TotalChallans = totalChallans
+			newVehicle.Response.PendingChallans = pendingChallans
+		}
+
+		err = newVehicle.UpdateToDB()
+		if err != nil {
+			errResp := NewErrorResponse("request successfull but unable to save data to database")
+			return newVehicle, 503, errResp
+		}
+
+		return newVehicle, http.StatusOK, nil
 	}
 
-	challans, statusCode, errResp := FetchChallans(challanPayload)
-	if errResp != nil && errResp.Error == "" {
-		return newVehicle, statusCode, errResp
-	}
-
-	totalChallans, pendingChallans, challanLists, err := challans.Get()
-	if err != nil {
-		log.Printf("count challans error: %v", err)
-	}
-
-	if err == nil {
-		newVehicle.Response.ChallanList = append(newVehicle.Response.ChallanList, challanLists...)
-	}
-
-	newVehicle.Response.TotalChallans = totalChallans
-	newVehicle.Response.PendingChallans = pendingChallans
-
-	err = newVehicle.UpdateToDB()
-	if err != nil {
-		errResp := NewErrorResponse("request successfull but unable to save data to database")
-		return newVehicle, 503, errResp
-	}
-
-	return newVehicle, http.StatusOK, nil
+	return VehicleRequest{}, res.StatusCode, NewErrorResponse(newVehicle.Message)
 }
 
 func FetchRcDetails(licensePlate, chassis, engine string) (newVehicle VehicleRequest, statusCode int, err error) {
@@ -453,14 +461,6 @@ func FetchChallans(payload []byte) (*ChallanResponse, int, *ErrorResponse) {
 		return nil, http.StatusBadRequest, errResp
 	}
 
-	// fmt.Println(string(body))
-
-	// // Save body to file
-	// err = os.WriteFile("vehicle_challans.json", body, 0644)
-	// if err != nil {
-	// 	log.Println("Failed to save response:", err)
-	// }
-
 	challan = NewVehicleChallanResponse()
 
 	decoder := json.NewDecoder(res.Body)
@@ -470,8 +470,14 @@ func FetchChallans(payload []byte) (*ChallanResponse, int, *ErrorResponse) {
 		return nil, http.StatusExpectationFailed, errResp
 	}
 
-	switch res.StatusCode {
-	case http.StatusOK:
+	if res.StatusCode == http.StatusOK {
+		// fmt.Println(string(body))
+
+		// // Save body to file
+		// err = os.WriteFile("vehicle_challans.json", body, 0644)
+		// if err != nil {
+		// 	log.Println("Failed to save response:", err)
+		// }
 
 		// delete existing challans of same vehicle
 		challan.Delete()
@@ -479,12 +485,7 @@ func FetchChallans(payload []byte) (*ChallanResponse, int, *ErrorResponse) {
 		challan.Save()
 
 		return challan, http.StatusOK, nil
-	case http.StatusTooManyRequests:
-		errResp = NewErrorResponse("request quota exceeded.")
-		return nil, http.StatusTooManyRequests, errResp
-
-	default:
-		errResp = NewErrorResponse(fmt.Sprintf("message-> %v, code-> %d", challan.Message, challan.Code))
-		return nil, res.StatusCode, errResp
 	}
+
+	return nil, res.StatusCode, NewErrorResponse(challan.Message)
 }
