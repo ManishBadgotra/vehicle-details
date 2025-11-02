@@ -42,16 +42,16 @@ func GetVehiclesFromList() {
 
 		day := os.Getenv("WEEKDAY")
 
-		fmt.Println(t)
-		fmt.Println(t.Date())
-		fmt.Println(t.Weekday())
-		fmt.Println(day)
+		if day == "" {
+			log.Println("env value for WEEKDAY is empty. add it before going further.")
+			os.Exit(1)
+		}
 
 		if strings.EqualFold(t.Weekday().String(), day) {
 			// Open the CSV file
 			// log.Println("opening vehicles.csv file")
 
-			file, err := os.Open("vehicles.csv")
+			file, err := os.Open(os.Getenv("VEHICLES_LIST"))
 			if err != nil {
 				log.Fatalf("Error opening file: %v", err)
 			}
