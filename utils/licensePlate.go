@@ -47,7 +47,7 @@ func GetVehiclesFromList() {
 			os.Exit(1)
 		}
 
-		if strings.EqualFold(t.Weekday().String(), day) {
+		if strings.EqualFold(strings.ToLower(t.Weekday().String()), strings.ToLower(day)) {
 			// Open the CSV file
 			// log.Println("opening vehicles.csv file")
 
