@@ -38,7 +38,7 @@ type vehicleStruct struct {
 
 func GetVehiclesFromList() {
 
-	for t := range time.Tick(time.Second) {
+	for t := range time.Tick(time.Second * 5) {
 
 		day := os.Getenv("WEEKDAY")
 
