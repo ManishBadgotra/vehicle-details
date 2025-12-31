@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"log/slog"
 	"net/http"
 	"os"
 	"regexp"
@@ -60,10 +61,11 @@ func GetVehiclesFromList() {
 			reader := csv.NewReader(file)
 			// log.Println("new csv reader created")
 
+			var lastVehicleNumber string
+			lastVehicleNumber = os.Getenv("LAST_VEHICLE")
+
 			fmt.Println("\nReading vehicle line by line:")
 			for {
-
-				var lastVehicleNumber string
 
 				record, err := reader.Read()
 				if err == io.EOF {
@@ -87,14 +89,16 @@ func GetVehiclesFromList() {
 				_, statusCode, errResp := models.FetchVehicleDetails(payload)
 				if errResp != nil {
 
+					slog.SetDefault(slog.New(slog.NewJSONHandler(os.Stderr, nil)))
+
 					forDay := 24 * time.Hour
 
 					if statusCode == 400 {
-						log.Printf("bad request for `License Number: %v`\n", reqVehicle.VehicleId)
+						log.Printf("bad request for `License Number: %v` \n", reqVehicle.VehicleId)
 					}
 
 					if statusCode == 401 {
-						log.Printf("Unauthorized/Expired for `License Number: %v`\n", reqVehicle.VehicleId)
+						log.Printf("Unauthorized/Expired for `License Number: %v` \n", reqVehicle.VehicleId)
 					}
 
 					if statusCode == 402 {
@@ -102,37 +106,37 @@ func GetVehiclesFromList() {
 					}
 
 					if statusCode == 403 {
-						log.Printf("Unauthenticated Request while requesting data for `License Number: %v`\n", reqVehicle.VehicleId)
+						log.Printf("Unauthenticated Request while requesting data for `License Number: %v` \n", reqVehicle.VehicleId)
 					}
 
 					if statusCode == 404 {
-						log.Printf("Not Found for `License Number: %v`\n", reqVehicle.VehicleId)
+						log.Printf("Not Found for `License Number: %v` \n", reqVehicle.VehicleId)
 					}
 
 					if statusCode == 405 {
-						log.Printf("Method Not Allowed for `License Number: %v`\n", reqVehicle.VehicleId)
+						log.Printf("Method Not Allowed for `License Number: %v` \n", reqVehicle.VehicleId)
 						os.Exit(1)
 					}
 
 					if statusCode == 415 {
-						log.Printf("Unsupported Media Type for `License Number: %v`\n", reqVehicle.VehicleId)
+						log.Printf("Unsupported Media Type for `License Number: %v` \n", reqVehicle.VehicleId)
 					}
 
 					if statusCode == 422 {
-						log.Printf("Request failed due to invalid details for `License Number: %v`\n", reqVehicle.VehicleId)
+						log.Printf("Request failed due to invalid details for `License Number: %v` \n", reqVehicle.VehicleId)
 					}
 
 					if statusCode == 429 {
-						log.Printf("Too many requests for `License Number: %v`\n", reqVehicle.VehicleId)
+						log.Printf("Too many requests for `License Number: %v` \n", reqVehicle.VehicleId)
 					}
 
 					if statusCode == 500 {
-						log.Printf("Internal Server Error while fetching data for `License Number: %v`\n,", reqVehicle.VehicleId)
-						log.Printf("error: %v for License Number: %v`\n", errResp.Error, reqVehicle.VehicleId)
+						log.Printf("Internal Server Error while fetching data for `License Number: %v`, \n", reqVehicle.VehicleId)
+						log.Printf("error: %v for License Number: %v` \n", errResp.Error, reqVehicle.VehicleId)
 					}
 
 					if statusCode == 503 {
-						log.Printf("Backend Down/Maintenance stopping server for few hours for `License Number: %v`\n", reqVehicle.VehicleId)
+						log.Printf("Backend Down/Maintenance stopping server for few hours for `License Number: %v` \n", reqVehicle.VehicleId)
 					}
 
 					log.Println("cron job on sleep for a day")
@@ -140,14 +144,13 @@ func GetVehiclesFromList() {
 
 				}
 
-				lastVehicleNumber = reqVehicle.VehicleId
-
 				if statusCode == http.StatusOK {
-					log.Printf("Reqeust successfull for `License Number: %v`\n", reqVehicle.VehicleId)
+					log.Printf("Reqeust successfull for `License Number: %v` \n", reqVehicle.VehicleId)
 				}
 
-				if lastVehicleNumber == "UP14JT8619" {
+				if lastVehicleNumber == reqVehicle.VehicleId {
 					log.Println("All Vehicles detail fetch successfully for this day")
+					log.Printf("Last Details fetched for vehicle: %s\n", lastVehicleNumber)
 					time.Sleep(24 * time.Hour)
 				}
 
