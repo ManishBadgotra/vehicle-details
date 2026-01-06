@@ -3,7 +3,6 @@ package utils
 import (
 	"encoding/csv"
 	"encoding/json"
-	"fmt"
 	"io"
 	"log"
 	"log/slog"
@@ -64,7 +63,7 @@ func GetVehiclesFromList() {
 			var lastVehicleNumber string
 			lastVehicleNumber = os.Getenv("LAST_VEHICLE")
 
-			fmt.Println("\nReading vehicle line by line:")
+			// fmt.Println("\nReading vehicle line by line:")
 			for {
 
 				record, err := reader.Read()
@@ -158,7 +157,6 @@ func GetVehiclesFromList() {
 		}
 
 		time.Sleep(time.Millisecond * 1500)
-		// log.Fatalf("whole csv data fetched")
 	}
 
 }

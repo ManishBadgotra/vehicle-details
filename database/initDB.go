@@ -5,7 +5,6 @@ import (
 	"database/sql"
 	"fmt"
 	"os"
-	"path/filepath"
 
 	_ "modernc.org/sqlite" // this package is required for sqlite driver
 )
@@ -128,7 +127,7 @@ func OpenDB() error {
 
 	databasePath := os.Getenv("DB_PATH")
 
-	fmt.Println("db path is valid ->", filepath.IsLocal(databasePath))
+	// fmt.Println("db path is valid ->", filepath.IsLocal(databasePath))
 
 	db, err := sql.Open("sqlite", databasePath)
 	if err != nil {
