@@ -132,22 +132,24 @@ func (challan ChallanResponse) Save() error {
 
 	defer stmt.Close()
 
-	fmt.Println("Number of challans to save:", len(challan.Response.ChallanList))
+	// fmt.Println("Number of challans to save:", len(challan.Response.ChallanList))
 	log.Println("Number of challans to save:", len(challan.Response.ChallanList))
 
 	for _, c := range challan.Response.ChallanList {
-		if _, err := stmt.Exec(
-			&c.ChallanNo,
-			&challan.Response.VehicleID,
-			&c.Date,
-			&c.AccusedName,
-			&c.ChallanStatus,
-			&c.Amount,
-			&c.State,
-			&c.Area,
-			&c.Offence,
-		); err != nil {
-			return err
+		if c.State == "Pending" {
+			if _, err := stmt.Exec(
+				&c.ChallanNo,
+				&challan.Response.VehicleID,
+				&c.Date,
+				&c.AccusedName,
+				&c.ChallanStatus,
+				&c.Amount,
+				&c.State,
+				&c.Area,
+				&c.Offence,
+			); err != nil {
+				return err
+			}
 		}
 	}
 
