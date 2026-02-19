@@ -321,6 +321,7 @@ func FetchVehicleDetails(payload []byte) (newVehicle VehicleRequest, statusCode 
 	}
 
 	decoder := json.NewDecoder(res.Body)
+
 	if err := decoder.Decode(&newVehicle); err != nil {
 		return newVehicle, http.StatusNotFound, NewErrorResponse(err.Error())
 	}
