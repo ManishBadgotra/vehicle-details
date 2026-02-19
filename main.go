@@ -41,7 +41,7 @@ func main() {
 	mux.HandleFunc("POST /v1/signup", controllers.Signup)
 
 	mux.HandleFunc("GET /v1/vehicles", controllers.GetVehicle)
-	mux.HandleFunc("POST /v1/vehicles", controllers.AddVehicle)
+	// mux.HandleFunc("POST /v1/vehicles", controllers.AddVehicle)
 	// mux.HandleFunc("PUT /v1/vehicles", controllers.UpdateVehicle)
 	// mux.HandleFunc("DELETE /v1/vehicles", controllers.DeleteVehicle)
 

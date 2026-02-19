@@ -157,7 +157,7 @@ func GetVehiclesFromList() {
 				maxMillisecond := 2501
 				randomMillisecond := rand.Intn(maxMillisecond)
 
-				log.Println("Time before next API call (in Millisecond): ", randomMillisecond)
+				// log.Println("Time before next API call (in Millisecond): ", randomMillisecond)
 				time.Sleep(time.Millisecond * time.Duration(randomMillisecond))
 			}
 		}
