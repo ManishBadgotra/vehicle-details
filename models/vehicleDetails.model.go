@@ -68,6 +68,91 @@ type VehicleResponse struct {
 	ChallanList            []Challan `json:"challans,omitempty"`
 }
 
+func GetAllVehicles() ([]VehicleResponse, error) {
+	conn, err := database.DBInstance.Conn(context.TODO())
+	if err != nil {
+		fmt.Fprintln(os.Stdout, "unable to establish connection")
+		return nil, fmt.Errorf("unable to establish connection")
+	}
+	defer conn.Close()
+
+	tx, err := conn.BeginTx(context.TODO(), &sql.TxOptions{
+		Isolation: sql.LevelDefault,
+		ReadOnly:  true, // read-only since we're just fetching
+	})
+	if err != nil {
+		fmt.Fprintln(os.Stdout, "unable to begin transaction")
+		return nil, fmt.Errorf("unable to begin transaction")
+	}
+	defer tx.Rollback()
+
+	rows, err := tx.Query(database.FindAllVehicles) // add this query constant in your database package
+	if err != nil {
+		return nil, fmt.Errorf("unable to execute query: %w", err)
+	}
+	defer rows.Close()
+
+	var vehicles []VehicleResponse
+
+	for rows.Next() {
+		var vehicle VehicleResponse
+		err = rows.Scan(
+			&vehicle.LicensePlate,
+			&vehicle.OwnerName,
+			&vehicle.FatherName,
+			&vehicle.IsFinanced,
+			&vehicle.Financer,
+			&vehicle.PresentAddress,
+			&vehicle.PermanentAddress,
+			&vehicle.InsuranceCompany,
+			&vehicle.InsurancePolicy,
+			&vehicle.InsuranceExpiry,
+			&vehicle.Class,
+			&vehicle.RegistrationDate,
+			&vehicle.PuccUpto,
+			&vehicle.PuccNumber,
+			&vehicle.ChassisNumber,
+			&vehicle.EngineNumber,
+			&vehicle.FuelType,
+			&vehicle.BrandName,
+			&vehicle.BrandModel,
+			&vehicle.CubicCapacity,
+			&vehicle.GrossWeight,
+			&vehicle.Cylinders,
+			&vehicle.Color,
+			&vehicle.Norms,
+			&vehicle.SeatingCapacity,
+			&vehicle.OwnerCount,
+			&vehicle.Fitness,
+			&vehicle.TaxUpto,
+			&vehicle.PermitNumber,
+			&vehicle.PermitValidUpto,
+			&vehicle.PermitType,
+			&vehicle.NationalPermitNumber,
+			&vehicle.NationalPermitUpto,
+			&vehicle.NationalPermitIssuedBy,
+			&vehicle.TotalChallans,
+			&vehicle.PendingChallans,
+			&vehicle.RcStatus,
+		)
+		if err != nil {
+			return nil, fmt.Errorf("error scanning row: %w", err)
+		}
+		vehicles = append(vehicles, vehicle)
+	}
+
+	// Always check rows.Err() after iteration
+	if err = rows.Err(); err != nil {
+		return nil, fmt.Errorf("row iteration error: %w", err)
+	}
+
+	if err = tx.Commit(); err != nil {
+		return nil, fmt.Errorf("something went wrong")
+	}
+
+	return vehicles, nil
+}
+
 func (v VehicleRequest) GetFromDB(licensePlate string) (VehicleResponse, error) {
 	var vehicle VehicleResponse
 	// var vehicles VehicleRequest
@@ -320,6 +405,7 @@ func FetchVehicleDetails(payload []byte) (newVehicle VehicleRequest, statusCode 
 		return newVehicle, http.StatusBadRequest, errResp
 	}
 
+	defer res.Body.Close()
 	decoder := json.NewDecoder(res.Body)
 
 	if err := decoder.Decode(&newVehicle); err != nil {
@@ -463,6 +549,7 @@ func FetchChallans(payload []byte) (*ChallanResponse, int, *ErrorResponse) {
 
 	challan = NewVehicleChallanResponse()
 
+	defer res.Body.Close()
 	decoder := json.NewDecoder(res.Body)
 	err = decoder.Decode(&challan)
 	if err != nil {

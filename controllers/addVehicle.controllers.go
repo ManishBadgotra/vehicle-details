@@ -10,6 +10,25 @@ import (
 	"github.com/manishbadgotra/vehicle-details/utils"
 )
 
+func GetAllVehicles(w http.ResponseWriter, r *http.Request) {
+
+	vehicles, err := models.GetAllVehicles()
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		errResp := models.NewErrorResponse("enter valid vehicle number")
+		json.NewEncoder(w).Encode(errResp)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+
+	resp := map[string]interface{}{
+		"response": vehicles,
+	}
+	json.NewEncoder(w).Encode(resp)
+}
+
 func GetVehicle(w http.ResponseWriter, r *http.Request) {
 	v := models.VehicleRequest{}
 

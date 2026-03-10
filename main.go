@@ -40,7 +40,9 @@ func main() {
 	mux.HandleFunc("POST /v1/login", controllers.Login)
 	mux.HandleFunc("POST /v1/signup", controllers.Signup)
 
-	mux.HandleFunc("GET /v1/vehicles", controllers.GetVehicle)
+	mux.HandleFunc("GET /v1/vehicles", controllers.GetAllVehicles)
+
+	// mux.HandleFunc("GET /v1/vehicles", controllers.GetVehicle)
 	// mux.HandleFunc("POST /v1/vehicles", controllers.AddVehicle)
 	// mux.HandleFunc("PUT /v1/vehicles", controllers.UpdateVehicle)
 	// mux.HandleFunc("DELETE /v1/vehicles", controllers.DeleteVehicle)
@@ -48,5 +50,5 @@ func main() {
 	// mux.HandleFunc("GET /v1/challans", controllers.GetVehicleChallans)
 
 	log.Println("running PORT on :5898")
-	log.Fatal(http.ListenAndServe(":5898", cors.New(corsOptions).Handler(mux)))
+	log.Fatal(http.ListenAndServe("0.0.0.0:5898", cors.New(corsOptions).Handler(mux)))
 }

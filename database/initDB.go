@@ -120,6 +120,48 @@ var (
 			offence
         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);
     `
+
+	FindAllVehicles = `SELECT 
+						license_plate, 
+						owner_name, 
+						father_name, 
+						is_financed, 
+						financer, 
+						present_address, 
+						permanent_address, 
+						insurance_company, 
+						insurance_policy, 
+						insurance_expiry, 
+						class, 
+						registration_date, 
+						pucc_upto, 
+						pucc_number, 
+						chassis_number, 
+						engine_number, 
+						fuel_type, 
+						brand_name, 
+						brand_model, 
+						cubic_capacity, 
+						gross_weight, 
+						cylinders, 
+						color, 
+						norms, 
+						seating_capacity, 
+						owner_count, 
+						fitness, 
+						tax_upto, 
+						permit_number, 
+						permit_valid_upto, 
+						permit_type, 
+						national_permit_number, 
+						national_permit_upto, 
+						national_permit_issued_by, 
+						total_challans, 
+						pending_challans, 
+						rc_status 
+						FROM vehicles
+	`
+
 	DBInstance *sql.DB
 )
 
