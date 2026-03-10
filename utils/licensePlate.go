@@ -150,7 +150,7 @@ func GetVehiclesFromList() {
 
 				if lastVehicleNumber == reqVehicle.VehicleId {
 					log.Println("All Vehicles detail fetch successfully for this day")
-					log.Printf("Last Details fetched for vehicle: %s\n", lastVehicleNumber)
+					log.Printf("Service Loop stop request is set for Vehicle: %s\n", lastVehicleNumber)
 					time.Sleep(24 * time.Hour)
 				}
 

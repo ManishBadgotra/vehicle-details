@@ -49,6 +49,6 @@ func main() {
 
 	// mux.HandleFunc("GET /v1/challans", controllers.GetVehicleChallans)
 
-	log.Println("running PORT on :5898")
-	log.Fatal(http.ListenAndServe("0.0.0.0:5898", cors.New(corsOptions).Handler(mux)))
+	log.Println("running PORT on :6000")
+	log.Fatal(http.ListenAndServe("0.0.0.0:6000", cors.New(corsOptions).Handler(mux)))
 }
