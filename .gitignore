@@ -2,5 +2,5 @@
 
 *.exe
 *.db
-data.db
+data.*
 *.csv
