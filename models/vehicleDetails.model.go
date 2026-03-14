@@ -3,7 +3,11 @@ package models
 import (
 	"bytes"
 	"context"
+	"crypto/hmac"
+	"crypto/sha256"
 	"database/sql"
+	"encoding/base64"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -377,27 +381,49 @@ func (v *VehicleRequest) DeleteFromDB(licensePlate string) (err error) {
 	return nil
 }
 
+func GenerateHMAC256Signature(payload []byte, secureKey string) string {
+	// base64_encode
+	base64String := base64.StdEncoding.EncodeToString(payload)
+
+	api_key, err := base64.StdEncoding.DecodeString(secureKey)
+	if err != nil {
+		// fallback: use as raw string if decode fails
+		api_key = []byte(secureKey)
+	}
+
+	// Create HMAC-SHA256 hasher with API key as secret
+	h := hmac.New(sha256.New, api_key)
+
+	// Write the base64 payload (as string) to the hasher
+	h.Write([]byte(base64String))
+
+	return hex.EncodeToString(h.Sum(nil))
+}
+
 func FetchVehicleDetails(payload []byte) (newVehicle VehicleRequest, statusCode int, errResp *ErrorResponse) {
 
 	var (
 		requestedURL string
+		x_id         string = os.Getenv("X_ID")
+		api_key      string = os.Getenv("API_KEY")
 	)
 	if os.Getenv("IN_PROD") == "1" {
 		requestedURL = os.Getenv("PROD_URL") + os.Getenv("V1_VEHICLE_ENDPOINT")
 	} else {
 		requestedURL = os.Getenv("UAT_URL") + os.Getenv("V1_VEHICLE_ENDPOINT")
 	}
-
 	req, err := http.NewRequest("POST", requestedURL, bytes.NewBuffer(payload))
 	if err != nil {
 		errResp := NewErrorResponse("unable to make request to the server")
 		return newVehicle, http.StatusInternalServerError, errResp
 	}
-
+	signature := GenerateHMAC256Signature(payload, api_key)
 	req.Header.Add("accept", "application/json")
 	req.Header.Add("Referer", "docs.apiclub.in")
 	req.Header.Add("content-type", "application/json")
-	req.Header.Add("x-api-key", os.Getenv("API_KEY"))
+	// req.Header.Add("x-api-key", api_key)
+	req.Header.Add("x-id", x_id)
+	req.Header.Add("x-signature", signature)
 
 	res, err := http.DefaultClient.Do(req)
 	if err != nil {
@@ -412,7 +438,7 @@ func FetchVehicleDetails(payload []byte) (newVehicle VehicleRequest, statusCode 
 		return newVehicle, http.StatusNotFound, NewErrorResponse(err.Error())
 	}
 
-	if res.StatusCode == http.StatusOK {
+	if http.StatusOK == res.StatusCode {
 
 		challanRequest := NewRequestBody(newVehicle.Response.LicensePlate, newVehicle.Response.ChassisNumber, newVehicle.Response.EngineNumber)
 
@@ -521,6 +547,7 @@ func FetchChallans(payload []byte) (*ChallanResponse, int, *ErrorResponse) {
 	var (
 		errResp *ErrorResponse
 		challan *ChallanResponse
+		api_key string = os.Getenv("API_KEY")
 	)
 
 	var requestedURL string
@@ -536,10 +563,14 @@ func FetchChallans(payload []byte) (*ChallanResponse, int, *ErrorResponse) {
 		return nil, http.StatusInternalServerError, errResp
 	}
 
+	signature := GenerateHMAC256Signature(payload, api_key)
+
 	req.Header.Add("accept", "application/json")
 	req.Header.Add("Referer", "docs.apiclub.in")
 	req.Header.Add("Content-Type", "application/json")
-	req.Header.Add("x-api-key", os.Getenv("API_KEY"))
+	// req.Header.Add("x-api-key", api_key)
+	req.Header.Add("x-id", os.Getenv("X_ID"))
+	req.Header.Add("x-signature", signature)
 
 	res, err := http.DefaultClient.Do(req)
 	if err != nil {

@@ -110,7 +110,8 @@ func GetVehiclesFromList() {
 					}
 
 					if statusCode == 404 {
-						log.Printf("Not Found for `License Number: %v` \n", reqVehicle.VehicleId)
+						slog.Error(errResp.Error, "License Number", reqVehicle.VehicleId)
+						// log.Printf("Not Found for `License Number: %v` \n", reqVehicle.VehicleId)
 					}
 
 					if statusCode == 405 {
