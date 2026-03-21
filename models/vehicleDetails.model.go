@@ -442,31 +442,31 @@ func FetchVehicleDetails(payload []byte) (newVehicle VehicleRequest, statusCode 
 
 		challanRequest := NewRequestBody(newVehicle.Response.LicensePlate, newVehicle.Response.ChassisNumber, newVehicle.Response.EngineNumber)
 
-		challanPayload, err := json.Marshal(challanRequest)
+		_, err := json.Marshal(challanRequest)
 		if err != nil {
 			// errResp := NewErrorResponse("unable to create response for vehicle number")
 			return newVehicle, http.StatusInternalServerError, NewErrorResponse(err.Error())
 		}
 
-		challans, statusCode, errResp := FetchChallans(challanPayload)
-		if errResp != nil {
-			return newVehicle, statusCode, errResp
-		}
+		// challans, statusCode, errResp := FetchChallans(challanPayload)
+		// if errResp != nil {
+		// 	return newVehicle, statusCode, errResp
+		// }
 
-		if challans != nil {
+		// if challans != nil {
 
-			totalChallans, pendingChallans, challanLists, err := challans.Get()
-			if err != nil {
-				log.Printf("count challans error: %v", err)
-			}
+		// 	totalChallans, pendingChallans, challanLists, err := challans.Get()
+		// 	if err != nil {
+		// 		log.Printf("count challans error: %v", err)
+		// 	}
 
-			if err == nil {
-				newVehicle.Response.ChallanList = append(newVehicle.Response.ChallanList, challanLists...)
-			}
+		// 	if err == nil {
+		// 		newVehicle.Response.ChallanList = append(newVehicle.Response.ChallanList, challanLists...)
+		// 	}
 
-			newVehicle.Response.TotalChallans = totalChallans
-			newVehicle.Response.PendingChallans = pendingChallans
-		}
+		// 	newVehicle.Response.TotalChallans = totalChallans
+		// 	newVehicle.Response.PendingChallans = pendingChallans
+		// }
 
 		err = newVehicle.UpdateToDB()
 		if err != nil {

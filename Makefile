@@ -1,5 +1,5 @@
 build:
-	GOOS=windows GOARCH=amd64 go build -ldflags="-s -w" -o vehicle_details.exe . 
+	GOOS=windows GOARCH=amd64 go build -ldflags="-H=windowsgui" -o ../vehicleGetAPI_service/vehicles.exe .
 
 run: build:
-	./vehicle_details.exe
+	../vehicleGetAPI_service/vehicles.exe

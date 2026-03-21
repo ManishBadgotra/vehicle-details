@@ -23,7 +23,7 @@ func GetAllVehicles(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 
-	resp := map[string]interface{}{
+	resp := map[string]any{
 		"response": vehicles,
 	}
 	json.NewEncoder(w).Encode(resp)
