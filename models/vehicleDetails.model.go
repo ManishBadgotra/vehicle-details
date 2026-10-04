@@ -440,13 +440,13 @@ func FetchVehicleDetails(payload []byte) (newVehicle VehicleRequest, statusCode 
 
 	if http.StatusOK == res.StatusCode {
 
-		challanRequest := NewRequestBody(newVehicle.Response.LicensePlate, newVehicle.Response.ChassisNumber, newVehicle.Response.EngineNumber)
+		// challanRequest := NewRequestBody(newVehicle.Response.LicensePlate, newVehicle.Response.ChassisNumber, newVehicle.Response.EngineNumber)
 
-		_, err := json.Marshal(challanRequest)
-		if err != nil {
-			// errResp := NewErrorResponse("unable to create response for vehicle number")
-			return newVehicle, http.StatusInternalServerError, NewErrorResponse(err.Error())
-		}
+		// challanPayload, err := json.Marshal(challanRequest)
+		// if err != nil {
+		// 	// errResp := NewErrorResponse("unable to create response for vehicle number")
+		// 	return newVehicle, http.StatusInternalServerError, NewErrorResponse(err.Error())
+		// }
 
 		// challans, statusCode, errResp := FetchChallans(challanPayload)
 		// if errResp != nil {

@@ -7,6 +7,7 @@ import (
 	"log/slog"
 	"net/http"
 	"os"
+	"path/filepath"
 	"time"
 
 	"github.com/joho/godotenv"
@@ -26,7 +27,11 @@ const svcName = "VehicleGetAPI"
 func initDBPath() error {
 	slog.SetDefault(slog.New(slog.NewJSONHandler(os.Stdout, nil)))
 
-	godotenv.Load()
+	exePath, _ := os.Executable()
+	dir := filepath.Dir(exePath)
+	os.Chdir(dir)
+
+	godotenv.Load(filepath.Join(dir, ".env"))
 
 	if err := database.CreateDB(); err != nil {
 		return fmt.Errorf("unable to create tables in database table: %v", err.Error())

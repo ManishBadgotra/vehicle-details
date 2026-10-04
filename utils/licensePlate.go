@@ -6,7 +6,6 @@ import (
 	"io"
 	"log"
 	"log/slog"
-	"math/rand"
 	"net/http"
 	"os"
 	"regexp"
@@ -155,11 +154,11 @@ func GetVehiclesFromList() {
 					time.Sleep(24 * time.Hour)
 				}
 
-				maxMillisecond := 2501
-				randomMillisecond := rand.Intn(maxMillisecond)
+				// MAX_SECONDS := 300
+				// randomSeconds := rand.Intn(MAX_SECONDS)
 
-				// log.Println("Time before next API call (in Millisecond): ", randomMillisecond)
-				time.Sleep(time.Millisecond * time.Duration(randomMillisecond))
+				// log.Println("Time before next API call (in Millisecond): ", randomSeconds)
+				// time.Sleep(time.Second * time.Duration(randomSeconds))
 			}
 		}
 	}
